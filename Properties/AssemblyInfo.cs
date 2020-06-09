@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("RegExSQL")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Collection of RegEx functions to use in MSSQL - functions use RegEx Compiled mode")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Ascentis Corporation, Inc.")]
 [assembly: AssemblyProduct("RegExSQL")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]

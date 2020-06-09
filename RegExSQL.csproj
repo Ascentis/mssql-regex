@@ -7,8 +7,8 @@
     <ProjectGuid>{3290E1D4-D91D-4F58-B66E-78964FE330E6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RegExSQL</RootNamespace>
-    <AssemblyName>RegExSQL</AssemblyName>
+    <RootNamespace>Ascentis.RegExSQL</RootNamespace>
+    <AssemblyName>Ascentis.RegExSQL</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
