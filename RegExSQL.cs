@@ -12,11 +12,11 @@ using System.Threading;
 public class RegExCompiled
 {
     private static volatile int _execCount;
-    private static readonly ConcurrentDictionary<string, ConcurrentStack<Regex>> RegexCache = new ConcurrentDictionary<string, ConcurrentStack<Regex>>();
+    private static readonly ConcurrentDictionary<string, ConcurrentStack<Regex>> RegexPool = new ConcurrentDictionary<string, ConcurrentStack<Regex>>();
 
     private static ConcurrentStack<Regex> GetRegexStack(string pattern)
     {
-        return RegexCache.GetOrAdd(pattern, _ => new ConcurrentStack<Regex>());
+        return RegexPool.GetOrAdd(pattern, _ => new ConcurrentStack<Regex>());
     }
 
     private static Regex RegexAcquire(string pattern)
@@ -196,14 +196,14 @@ public class RegExCompiled
     [SqlFunction(IsDeterministic = true, IsPrecise = true)]
     public static int RegExCachedCount()
     {
-        return RegexCache.Count;
+        return RegexPool.Sum(stack => stack.Value.Count);
     }
 
     [SqlFunction(IsDeterministic = true, IsPrecise = true)]
     public static int RegExClearCache()
     {
-        var cnt = RegexCache.Count;
-        RegexCache.Clear();
+        var cnt = RegexPool.Count;
+        RegexPool.Clear();
         return cnt;
     }
 

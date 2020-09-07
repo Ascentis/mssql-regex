@@ -150,7 +150,7 @@ namespace UnitTestRegExSQL
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
-            Assert.IsTrue((int)cmd4.ExecuteScalar() > 4000, "(int)cmd2.ExecuteScalar() > 4000");
+            Assert.IsTrue((int)cmd4.ExecuteScalar() >= 8000, "(int)cmd2.ExecuteScalar() > 8000");
         }
 
         [TestMethod]
