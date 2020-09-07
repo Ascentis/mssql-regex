@@ -138,11 +138,11 @@ namespace UnitTestRegExSQL
             {
                 using var conn = new SqlConnection(Settings.Default.ConnectionString);
                 conn.Open();
+                using var cmd = new SqlCommand("SELECT dbo.RegExMatch('hello', 'hel+o')", conn);
+                using var cmd2 = new SqlCommand("SELECT dbo.RegExMatch('hello', 'world')", conn);
                 for (var i = 0; i < 1000; i++)
                 {
-                    using var cmd = new SqlCommand("SELECT dbo.RegExMatch('hello', 'hel+o')", conn);
                     Assert.AreEqual("hello", (string)cmd.ExecuteScalar());
-                    using var cmd2 = new SqlCommand("SELECT dbo.RegExMatch('hello', 'world')", conn);
                     Assert.AreEqual("", (string)cmd2.ExecuteScalar());
                 }
             });
