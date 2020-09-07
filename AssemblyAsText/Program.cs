@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace AssemblyAsText
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     internal class Program
     {
         private static string GetHexString(string assemblyPath)

@@ -5,12 +5,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.SqlServer.Server;
 using System.Text.RegularExpressions;
+using System.Threading;
 
-[SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "CheckNamespace")]
 [SuppressMessage("ReSharper", "UnusedMember.Global")]
 public class RegExCompiled
 {
+    private static volatile int _execCount;
     private static readonly ConcurrentDictionary<string, ConcurrentStack<Regex>> RegexCache = new ConcurrentDictionary<string, ConcurrentStack<Regex>>();
 
     private static ConcurrentStack<Regex> GetRegexStack(string pattern)
@@ -20,6 +21,7 @@ public class RegExCompiled
 
     private static Regex RegexAcquire(string pattern)
     {
+        Interlocked.Increment(ref _execCount);
         var stack = GetRegexStack(pattern);
         if (!stack.TryPop(out var regex))
             regex = new Regex(pattern, RegexOptions.Compiled);
@@ -190,4 +192,32 @@ public class RegExCompiled
             RegexRelease(pattern, regex);
         }
     }
-};
+
+    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    public static int RegExCachedCount()
+    {
+        return RegexCache.Count;
+    }
+
+    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    public static int RegExClearCache()
+    {
+        var cnt = RegexCache.Count;
+        RegexCache.Clear();
+        return cnt;
+    }
+
+    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    public static int RegExExecCount()
+    {
+        return _execCount;
+    }
+
+    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    public static int RegExResetExecCount()
+    {
+        var cnt = _execCount;
+        _execCount = 0;
+        return cnt;
+    }
+}

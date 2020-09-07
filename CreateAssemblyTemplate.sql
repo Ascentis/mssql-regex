@@ -84,6 +84,34 @@ IF EXISTS (SELECT *
 	DROP FUNCTION RegExMatchesGroup
 GO
 
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCachedCount]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExCachedCount
+GO
+
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExClearCache]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExClearCache
+GO
+
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExExecCount]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExExecCount
+GO
+
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetExecCount]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExResetExecCount
+GO
+
 IF EXISTS (select *
 	from sys.assembly_files f
 	full outer join  sys.assemblies a
@@ -126,38 +154,38 @@ FROM @asmBin
 WITH PERMISSION_SET = UNSAFE
 GO
 
-CREATE FUNCTION RegExIsMatch
-( @input nvarchar(max),
+CREATE FUNCTION RegExIsMatch( 
+  @input nvarchar(max),
   @pattern nvarchar(max)  
 )
 RETURNS bit EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledIsMatch
 GO
 
-CREATE FUNCTION RegExMatch
-( @input nvarchar(max),
+CREATE FUNCTION RegExMatch( 
+  @input nvarchar(max),
   @pattern nvarchar(max)  
 )
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatch
 GO
 
-CREATE FUNCTION RegExMatchIndexed
-( @input nvarchar(max),
+CREATE FUNCTION RegExMatchIndexed( 
+  @input nvarchar(max),
   @pattern nvarchar(max),
   @index int
 )
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchIndexed
 GO
 
-CREATE FUNCTION RegExMatchGroup
-( @input nvarchar(max),
+CREATE FUNCTION RegExMatchGroup( 
+  @input nvarchar(max),
   @pattern nvarchar(max),
   @group int
 )
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroup
 GO
 
-CREATE FUNCTION RegExMatchGroupIndexed
-( @input nvarchar(max),
+CREATE FUNCTION RegExMatchGroupIndexed( 
+  @input nvarchar(max),
   @pattern nvarchar(max),
   @group int,
   @index int
@@ -165,16 +193,16 @@ CREATE FUNCTION RegExMatchGroupIndexed
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupIndexed
 GO
 
-CREATE FUNCTION RegExReplace
-( @input nvarchar(max),
+CREATE FUNCTION RegExReplace( 
+  @input nvarchar(max),
   @pattern nvarchar(max),
   @replacement nvarchar(max)
 )
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplace
 GO
 
-CREATE FUNCTION RegExReplaceCount
-( @input nvarchar(max),
+CREATE FUNCTION RegExReplaceCount( 
+  @input nvarchar(max),
   @pattern nvarchar(max),
   @replacement nvarchar(max),
   @count int
@@ -182,41 +210,52 @@ CREATE FUNCTION RegExReplaceCount
 RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceCount
 GO
 
-CREATE FUNCTION RegExSplit
-(
+CREATE FUNCTION RegExSplit(
 	@input nvarchar(max),
 	@pattern nvarchar(max)
 )
 RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplit
 GO
 
-CREATE FUNCTION RegExEscape
-(
+CREATE FUNCTION RegExEscape(
 	@input nvarchar(max)
 )
 RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledEscape
 GO
 
-CREATE FUNCTION RegExUnescape
-(
+CREATE FUNCTION RegExUnescape(
 	@input nvarchar(max)
 )
 RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledUnescape
 GO
 
-CREATE FUNCTION RegExMatches
-(
+CREATE FUNCTION RegExMatches(
 	@input nvarchar(max),
 	@pattern nvarchar(max)
 )
 RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatches
 GO
 
-CREATE FUNCTION RegExMatchesGroup
-(
+CREATE FUNCTION RegExMatchesGroup(
 	@input nvarchar(max),
 	@pattern nvarchar(max),
 	@group int
 )
 RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroup
+GO
+
+CREATE FUNCTION RegExCachedCount()
+RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCachedCount
+GO
+
+CREATE FUNCTION RegExClearCache()
+RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExClearCache
+GO
+
+CREATE FUNCTION RegExExecCount()
+RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExecCount
+GO
+
+CREATE FUNCTION RegExResetExecCount()
+RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExecCount
 GO
