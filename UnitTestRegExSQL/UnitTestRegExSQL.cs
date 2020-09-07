@@ -132,7 +132,7 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
-        public void TestRegExParallelMatch()
+        public void TestRegExParallelStressMatch()
         {
             var loopRegExAction = new Action(() =>
             {
@@ -140,7 +140,7 @@ namespace UnitTestRegExSQL
                 conn.Open();
                 using var cmd = new SqlCommand("SELECT dbo.RegExMatch('hello', 'hel+o')", conn);
                 using var cmd2 = new SqlCommand("SELECT dbo.RegExMatch('hello', 'world')", conn);
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 10000; i++)
                 {
                     Assert.AreEqual("hello", (string)cmd.ExecuteScalar());
                     Assert.AreEqual("", (string)cmd2.ExecuteScalar());
@@ -150,7 +150,7 @@ namespace UnitTestRegExSQL
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
-            Assert.IsTrue((int)cmd4.ExecuteScalar() >= 8000, "(int)cmd2.ExecuteScalar() > 8000");
+            Assert.IsTrue((int)cmd4.ExecuteScalar() >= 80000, "(int)cmd2.ExecuteScalar() > 80000");
         }
 
         [TestMethod]
