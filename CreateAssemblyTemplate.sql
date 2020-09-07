@@ -138,9 +138,9 @@ SELECT @hash = HASHBYTES('SHA2_512', @asmBin);
 IF EXISTS(SELECT * from sys.trusted_assemblies
 	  	  WHERE description = 'Ascentis.RegExSql')
 BEGIN
-	DECLARE @UnTrustAssembliesCmd nvarchar(max);
+	DECLARE @UnTrustAssembliesCmd nvarchar(max) = '';
 
-	SELECT @UnTrustAssembliesCmd = 'EXEC sys.sp_drop_trusted_assembly @hash = ' + CONVERT(varchar(max), hash, 1) + ';' 
+	SELECT @UnTrustAssembliesCmd = @UnTrustAssembliesCmd + 'EXEC sys.sp_drop_trusted_assembly @hash = ' + CONVERT(varchar(max), hash, 1) + ';' 
 	FROM sys.trusted_assemblies
 	WHERE description = 'Ascentis.RegExSql';
 
