@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -9,15 +10,17 @@ using System.Text.RegularExpressions;
 using System.Threading;
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
-[SuppressMessage("ReSharper", "UnusedMember.Global")]
 public class RegExCompiled
 {
-    private static readonly ConcurrentDictionary<string, ConcurrentStack<PooledRegex>> RegexPool;
+    // Faster by about 12% to use a regular Dictionary<> with a ReaderWriterLock than a ConcurrentDictionary<>
+    private static readonly ReaderWriterLock RegexPoolLock;
+    private static readonly IDictionary<string, ConcurrentStack<PooledRegex>> RegexPool;
     private static volatile int _execCount;
 
     static RegExCompiled()
     {
-        RegexPool = new ConcurrentDictionary<string, ConcurrentStack<PooledRegex>>();
+        RegexPoolLock = new ReaderWriterLock();
+        RegexPool = new Dictionary<string, ConcurrentStack<PooledRegex>>();
     }
 
     protected class PooledRegex : Regex, IDisposable
@@ -38,10 +41,41 @@ public class RegExCompiled
     protected static PooledRegex RegexAcquire(string pattern)
     {
         Interlocked.Increment(ref _execCount);
-        var stack = RegexPool.GetOrAdd(pattern, _ => new ConcurrentStack<PooledRegex>());
+        var stack = GetPooledRegexStack(pattern);
         if (!stack.TryPop(out var regex))
             regex = new PooledRegex(pattern, stack);
         return regex;
+    }
+
+    private static ConcurrentStack<PooledRegex> GetPooledRegexStack(string pattern)
+    {
+        ConcurrentStack<PooledRegex> stack;
+        RegexPoolLock.AcquireReaderLock(-1);
+        try
+        {
+            if (!RegexPool.TryGetValue(pattern, out stack))
+            {
+                var cookie = RegexPoolLock.UpgradeToWriterLock(-1);
+                try
+                {
+                    if (!RegexPool.TryGetValue(pattern, out stack))
+                    {
+                        stack = new ConcurrentStack<PooledRegex>();
+                        RegexPool.Add(pattern, stack);
+                    }
+                }
+                finally
+                {
+                    RegexPoolLock.DowngradeFromWriterLock(ref cookie);
+                }
+            }
+        }
+        finally
+        {
+            RegexPoolLock.ReleaseReaderLock();
+        }
+
+        return stack;
     }
 
     public static void FillRow(object row, out SqlString str)
@@ -136,14 +170,30 @@ public class RegExCompiled
     [SqlFunction(IsDeterministic = true, IsPrecise = true)]
     public static int RegExCachedCount()
     {
-        return RegexPool.Sum(stack => stack.Value.Count);
+        RegexPoolLock.AcquireReaderLock(-1);
+        try
+        {
+            return RegexPool.Sum(stack => stack.Value.Count);
+        }
+        finally
+        {
+            RegexPoolLock.ReleaseReaderLock();
+        }
     }
 
     [SqlFunction(IsDeterministic = true, IsPrecise = true)]
     public static int RegExClearCache()
     {
         var cnt = RegexPool.Count;
-        RegexPool.Clear();
+        RegexPoolLock.AcquireWriterLock(-1);
+        try
+        {
+            RegexPool.Clear();
+        }
+        finally
+        {
+            RegexPoolLock.ReleaseWriterLock();
+        }
         return cnt;
     }
 

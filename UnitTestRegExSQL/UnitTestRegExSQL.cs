@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTestRegExSQL.Properties;
@@ -134,23 +135,27 @@ namespace UnitTestRegExSQL
         [TestMethod]
         public void TestRegExParallelStressMatch()
         {
+            const int parallelLevel = 4;
+            const int loopCount = 10000;
+
             var loopRegExAction = new Action(() =>
             {
                 using var conn = new SqlConnection(Settings.Default.ConnectionString);
                 conn.Open();
                 using var cmd = new SqlCommand("SELECT dbo.RegExMatch('hello', 'hel+o')", conn);
                 using var cmd2 = new SqlCommand("SELECT dbo.RegExMatch('hello', 'world')", conn);
-                for (var i = 0; i < 10000; i++)
+                for (var i = 0; i < loopCount; i++)
                 {
                     Assert.AreEqual("hello", (string)cmd.ExecuteScalar());
                     Assert.AreEqual("", (string)cmd2.ExecuteScalar());
                 }
             });
-            Parallel.Invoke(loopRegExAction, loopRegExAction, loopRegExAction, loopRegExAction);
+            Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
+
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
-            Assert.IsTrue((int)cmd4.ExecuteScalar() >= 80000, "(int)cmd2.ExecuteScalar() > 80000");
+            Assert.IsTrue((int)cmd4.ExecuteScalar() >= parallelLevel * loopCount * 2, $"(int)cmd2.ExecuteScalar() > {parallelLevel * loopCount * 2}");
         }
 
         [TestMethod]
