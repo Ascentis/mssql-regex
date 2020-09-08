@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -135,8 +136,10 @@ namespace UnitTestRegExSQL
         [TestMethod]
         public void TestRegExParallelStressMatch()
         {
-            const int parallelLevel = 4;
+            const int parallelLevel = 8;
             const int loopCount = 10000;
+
+            var stopWatch = Stopwatch.StartNew();
 
             var loopRegExAction = new Action(() =>
             {
@@ -151,7 +154,9 @@ namespace UnitTestRegExSQL
                 }
             });
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
-
+            
+            stopWatch.Stop();
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount, $"Elapsed time should be lesser than {loopCount}ms");
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
