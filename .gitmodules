@@ -1,0 +1,3 @@
+[submodule "Submodules/AdamMil.net"]
+	path = Submodules/AdamMil.net
+	url = https://github.com/AdamMil/AdamMil.net.git

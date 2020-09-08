@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using UnitTestRegExSQL.Properties;
@@ -10,11 +11,11 @@ using UnitTestRegExSQL.Properties;
 namespace UnitTestRegExSQL
 {
     [TestClass]
-    public class UnitTestRegExSql
+    public class UnitTestRegExSqlConnected
     {
         private static readonly SqlConnection Conn;
 
-        static UnitTestRegExSql()
+        static UnitTestRegExSqlConnected()
         {
             Conn = new SqlConnection(Settings.Default.ConnectionString);
             Conn.Open();
@@ -139,8 +140,6 @@ namespace UnitTestRegExSQL
             const int parallelLevel = 8;
             const int loopCount = 10000;
 
-            var stopWatch = Stopwatch.StartNew();
-
             var loopRegExAction = new Action(() =>
             {
                 using var conn = new SqlConnection(Settings.Default.ConnectionString);
@@ -153,9 +152,11 @@ namespace UnitTestRegExSQL
                     Assert.AreEqual("", (string)cmd2.ExecuteScalar());
                 }
             });
+
+            var stopWatch = Stopwatch.StartNew();
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
-            
             stopWatch.Stop();
+
             Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount, $"Elapsed time should be lesser than {loopCount}ms");
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
@@ -181,6 +182,32 @@ namespace UnitTestRegExSQL
             using var cmd5 = new SqlCommand("SELECT dbo.RegExResetExecCount()", Conn);
             Assert.AreNotEqual(0, (int)cmd5.ExecuteScalar());
             Assert.AreEqual(0, (int)cmd4.ExecuteScalar());
+        }
+
+        [TestMethod]
+        public void TestRegExPerformanceLongQuery()
+        {
+            const int parallelLevel = 8;
+
+            var cnt = 0;
+            var loopRegExAction = new Action(() =>
+            {
+                using var conn = new SqlConnection(Settings.Default.ConnectionString);
+                conn.Open();
+                using var cmd = new SqlCommand("SELECT TOP 200000 dbo.RegExIsMatch(MTIMEINFO, 'COMPOT4=') FROM TIME", conn);
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    if (reader.GetBoolean(0))
+                        Interlocked.Increment(ref cnt);
+                }
+            });
+            var stopWatch = Stopwatch.StartNew();
+            Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
+            stopWatch.Stop();
+
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 10000, $"Elapsed time should be lesser than 10000 ms");
+            Assert.IsTrue(cnt > 1000000, "cnt should be higher than 1000000");
         }
     }
 }
