@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>preview</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <NoWarn>3021</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -32,7 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
     <NoWarn>3021</NoWarn>
   </PropertyGroup>
@@ -51,8 +51,6 @@
   <ItemGroup>
     <Compile Include="RegExSQL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Submodules\AdamMil.net\Utilities\Interop.cs" />
-    <Compile Include="Submodules\AdamMil.net\Utilities\Threading.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Ascentis.RegEx.snk" />
@@ -60,7 +58,9 @@
   <ItemGroup>
     <Content Include="CreateAssemblyTemplate.sql" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Submodules\AdamMil.net\Utilities\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>AssemblyAsText Ascentis.RegExSQL.dll &gt; Ascentis.RegExSQL.txt
