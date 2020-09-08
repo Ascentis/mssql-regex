@@ -48,9 +48,23 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExIsMatchWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExIsMatchWithOptions('hello', 'hello', 1)", Conn);
+            Assert.IsTrue((bool)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
         public void TestRegExReplace()
         {
             using var cmd = new SqlCommand("SELECT dbo.RegExReplace('hello my world', 'my', 'your')", Conn);
+            Assert.AreEqual("hello your world", (string)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
+        public void TestRegExReplaceWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExReplaceWithOptions('hello MY world', 'my', 'your', 1)", Conn);
             Assert.AreEqual("hello your world", (string)cmd.ExecuteScalar());
         }
 
@@ -64,9 +78,32 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExReplaceCountWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExReplaceCountWithOptions('hello MY my world', 'my', 'your', 1, 1)", Conn);
+            Assert.AreEqual("hello your my world", (string)cmd.ExecuteScalar());
+            using var cmd2 = new SqlCommand("SELECT dbo.RegExReplaceCountWithOptions('hello MY MY world', 'my', 'your', 2, 1)", Conn);
+            Assert.AreEqual("hello your your world", (string)cmd2.ExecuteScalar());
+        }
+
+        [TestMethod]
         public void TestRegExSplit()
         {
             using var cmd = new SqlCommand("SELECT * FROM dbo.RegExSplit('hellomyworld', 'my')", Conn);
+            using var reader = cmd.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            var val = reader.GetSqlString(0);
+            Assert.AreEqual("hello", val);
+            Assert.IsTrue(reader.Read());
+            val = reader.GetSqlString(0);
+            Assert.AreEqual("world", val);
+            Assert.IsFalse(reader.Read());
+        }
+
+        [TestMethod]
+        public void TestRegExSplitWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExSplitWithOptions('helloMYworld', 'my', 1)", Conn);
             using var reader = cmd.ExecuteReader();
             Assert.IsTrue(reader.Read());
             var val = reader.GetSqlString(0);
@@ -99,10 +136,24 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExMatchWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExMatchWithOptions('HELLO', 'hel+o', 1)", Conn);
+            Assert.AreEqual("HELLO", (string)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
         public void TestRegExMatchIndexed()
         {
             using var cmd = new SqlCommand("SELECT dbo.RegExMatchIndexed('hello helllo', 'hel+o', 1)", Conn);
             Assert.AreEqual("helllo", (string)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
+        public void TestRegExMatchIndexedWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExMatchIndexedWithOptions('HELLO HELLLO', 'hel+o', 1, 1)", Conn);
+            Assert.AreEqual("HELLLO", (string)cmd.ExecuteScalar());
         }
 
         [TestMethod]
@@ -113,10 +164,24 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExMatchGroupWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExMatchGroupWithOptions('heLLo', 'he(ll)o', 1, 1)", Conn);
+            Assert.AreEqual("LL", (string)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
         public void TestRegExMatchGroupIndexed()
         {
             using var cmd = new SqlCommand("SELECT dbo.RegExMatchGroupIndexed('hello helllo', 'he(l*)o', 1, 1)", Conn);
             Assert.AreEqual("lll", (string)cmd.ExecuteScalar());
+        }
+
+        [TestMethod]
+        public void TestRegExMatchGroupIndexedWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExMatchGroupIndexedWithOptions('hello heLLLo', 'he(l*)o', 1, 1, 1)", Conn);
+            Assert.AreEqual("LLL", (string)cmd.ExecuteScalar());
         }
 
         [TestMethod]
@@ -134,6 +199,20 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExMatchesWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesWithOptions('heLLomyworld', 'l+', 1)", Conn);
+            using var reader = cmd.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            var val = reader.GetSqlString(0);
+            Assert.AreEqual("LL", val);
+            Assert.IsTrue(reader.Read());
+            val = reader.GetSqlString(0);
+            Assert.AreEqual("l", val);
+            Assert.IsFalse(reader.Read());
+        }
+
+        [TestMethod]
         public void TestRegExMatchesGroup()
         {
             using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroup('hellomyworld', '(l+)', 1)", Conn);
@@ -144,6 +223,20 @@ namespace UnitTestRegExSQL
             Assert.IsTrue(reader.Read());
             val = reader.GetSqlString(0);
             Assert.AreEqual("l", val);
+            Assert.IsFalse(reader.Read());
+        }
+
+        [TestMethod]
+        public void TestRegExMatchesGroupWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupWithOptions('heLLomyworLd', '(l+)', 1, 1)", Conn);
+            using var reader = cmd.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            var val = reader.GetSqlString(0);
+            Assert.AreEqual("LL", val);
+            Assert.IsTrue(reader.Read());
+            val = reader.GetSqlString(0);
+            Assert.AreEqual("L", val);
             Assert.IsFalse(reader.Read());
         }
 

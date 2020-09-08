@@ -17,6 +17,7 @@ using AdamMil.Utilities;
 [SuppressMessage("ReSharper", "CheckNamespace")]
 public class RegExCompiled
 {
+    private const string SingleStringTableDef = "STR NVARCHAR(MAX)";
     private const int AutoStopTimer = 60000;
 #if DEBUG
     private const int DefaultExpirationMilliseconds = 2000;
@@ -28,9 +29,9 @@ public class RegExCompiled
 
  #if UPLOCK
     private static readonly UpgradableReadWriteLock RegexPoolLock;
-    private static readonly IDictionary<string, PooledRegexStack> RegexPool;
+    private static readonly IDictionary<RegexKey, PooledRegexStack> RegexPool;
 #else
-    private static readonly ConcurrentDictionary<string, PooledRegexStack> RegexPool;
+    private static readonly ConcurrentDictionary<RegexKey, PooledRegexStack> RegexPool;
 #endif
 
     private static volatile int _execCount;
@@ -38,13 +39,18 @@ public class RegExCompiled
     private static readonly Timer CleanerTimer;
     private static int _lastExpirerRunTickcount;
 
+    private class RegexKey : Tuple<string, RegexOptions>
+    {
+        internal RegexKey(string pattern, RegexOptions options) : base(pattern, options) { }
+    }
+
     static RegExCompiled()
     {
 #if UPLOCK
         RegexPoolLock = new UpgradableReadWriteLock();
-        RegexPool = new Dictionary<string, PooledRegexStack>();
+        RegexPool = new Dictionary<RegexKey, PooledRegexStack>();
 #else
-        RegexPool = new ConcurrentDictionary<string, PooledRegexStack>();
+        RegexPool = new ConcurrentDictionary<RegexKey, PooledRegexStack>();
 #endif
         CleanerTimer = new Timer();
         CleanerTimer.Elapsed += (_, e) =>
@@ -146,7 +152,8 @@ public class RegExCompiled
     {
         private readonly PooledRegexStack _stack;
 
-        internal PooledRegex(string pattern, PooledRegexStack stack) : base(pattern, RegexOptions.Compiled)
+        internal PooledRegex(string pattern, PooledRegexStack stack, RegexOptions options) 
+            : base(pattern, RegexOptions.Compiled | options)
         {
             _stack = stack;
         }
@@ -157,34 +164,35 @@ public class RegExCompiled
         }
     }
 
-    protected static PooledRegex RegexAcquire(string pattern)
+    protected static PooledRegex RegexAcquire(string pattern, RegexOptions options = 0)
     {
         CheckCleanerTimerStarted();
         Interlocked.Increment(ref _execCount);
-        var stack = GetPooledRegexStack(pattern);
+        var stack = GetPooledRegexStack(pattern, options);
         if (!stack.TryPop(out var regex))
-            regex = new PooledRegex(pattern, stack);
+            regex = new PooledRegex(pattern, stack, options);
         return regex;
     }
 
-    private static PooledRegexStack GetPooledRegexStack(string pattern)
+    private static PooledRegexStack GetPooledRegexStack(string pattern, RegexOptions options)
     {
 #if UPLOCK
         PooledRegexStack stack;
         using var lockReleaser = RegexPoolLock.EnterRead();
         while (true)
         {
-            if (RegexPool.TryGetValue(pattern, out stack))
+            var key = new RegexKey(pattern, options);
+            if (RegexPool.TryGetValue(key, out stack))
                 break;
             var firstUpgrader = lockReleaser.Upgrade();
-            if (!firstUpgrader && RegexPool.TryGetValue(pattern, out stack))
+            if (!firstUpgrader && RegexPool.TryGetValue(key, out stack))
                 break;
             stack = new PooledRegexStack();
-            RegexPool.Add(pattern, stack);
+            RegexPool.Add(key, stack);
             break;
         }
 #else
-        var stack = RegexPool.GetOrAdd(pattern, _ => new PooledRegexStack());
+        var stack = RegexPool.GetOrAdd(new RegexKey(pattern, options), _ => new PooledRegexStack());
 #endif
         stack.Accessed();
         return stack;
@@ -195,91 +203,231 @@ public class RegExCompiled
         str = new SqlString((string)row);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static bool RegExCompiledIsMatch(string input, string pattern)
+    #region Functions exported to SQL
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static bool RegExCompiledIsMatchWithOptions(
+        string input, string pattern, int options)
     {
-        using var regex = RegexAcquire(pattern);
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Match(input).Success;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledReplace(string input, string pattern, string replacement)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static bool RegExCompiledIsMatch(
+        string input, string pattern)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledIsMatchWithOptions(input, pattern, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledReplace(
+        string input, string pattern, string replacement)
+    {
+        return RegExCompiledReplaceWithOptions(input, pattern, replacement, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledReplaceWithOptions(
+        string input, string pattern, string replacement, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Replace(input, replacement);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledReplaceCount(string input, string pattern, string replacement, int count)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledReplaceCount(
+        string input, string pattern, string replacement, int count)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledReplaceCountWithOptions(input, pattern, replacement, count, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledReplaceCountWithOptions(
+        string input, string pattern, string replacement, int count, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Replace(input, replacement, count);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillRow", TableDefinition = "STR NVARCHAR(MAX)")]
-    public static IEnumerable RegExCompiledSplit(string input, string pattern)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledSplit(
+        string input, string pattern)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledSplitWithOptions(input, pattern, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledSplitWithOptions(
+        string input, string pattern, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Split(input);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static string RegExCompiledEscape(string input)
     {
         return Regex.Escape(input);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static string RegExCompiledUnescape(string input)
     {
         return Regex.Unescape(input);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledMatch(string input, string pattern)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatch(
+        string input, string pattern)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchWithOptions(input, pattern, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchWithOptions(
+        string input, string pattern, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Match(input).Value;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledMatchIndexed(string input, string pattern, int index)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchIndexed(
+        string input, string pattern, int index)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchIndexedWithOptions(input, pattern, index, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchIndexedWithOptions(
+        string input, string pattern, int index, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         var matches = regex.Matches(input);
         return index >= matches.Count ? "" : matches[index].Value;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledMatchGroup(string input, string pattern, int group)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchGroup(
+        string input, string pattern, int group)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchGroupWithOptions(input, pattern, group, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchGroupWithOptions(
+        string input, string pattern, int group, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Match(input).Groups[group].Value;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
-    public static string RegExCompiledMatchGroupIndexed(string input, string pattern, int group, int index)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchGroupIndexed(
+        string input, string pattern, int group, int index)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchGroupIndexedWithOptions(input, pattern, group, index, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
+    public static string RegExCompiledMatchGroupIndexedWithOptions(
+        string input, string pattern, int group, int index, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         var matches = regex.Matches(input);
         return index >= matches.Count ? "" : matches[index].Groups[group].Value;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillRow", TableDefinition = "STR NVARCHAR(MAX)")]
-    public static IEnumerable RegExCompiledMatches(string input, string pattern)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledMatches(
+        string input, string pattern)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchesWithOptions(input, pattern, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledMatchesWithOptions(
+        string input, string pattern, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Matches(input).Cast<Match>().Select(m => m.Value).ToArray();
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillRow", TableDefinition = "STR NVARCHAR(MAX)")]
-    public static IEnumerable RegExCompiledMatchesGroup(string input, string pattern, int group)
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledMatchesGroup(
+        string input, string pattern, int group)
     {
-        using var regex = RegexAcquire(pattern);
+        return RegExCompiledMatchesGroupWithOptions(input, pattern, group, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true, 
+        FillRowMethodName = nameof(FillRow), 
+        TableDefinition = SingleStringTableDef)]
+    public static IEnumerable RegExCompiledMatchesGroupWithOptions(
+        string input, string pattern, int group, int options)
+    {
+        using var regex = RegexAcquire(pattern, (RegexOptions) options);
         return regex.Matches(input).Cast<Match>().Select(m => m.Groups[group].Value).ToArray();
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static int RegExCachedCount()
     {
 #if UPLOCK
@@ -288,7 +436,9 @@ public class RegExCompiled
         return RegexPool.Sum(stack => stack.Value.Count);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static int RegExClearCache()
     {
         var cnt = RegexPool.Count;
@@ -299,17 +449,23 @@ public class RegExCompiled
         return cnt;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static int RegExExecCount()
     {
         return _execCount;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true)]
+    [SqlFunction(
+        IsDeterministic = true, 
+        IsPrecise = true)]
     public static int RegExResetExecCount()
     {
         var cnt = _execCount;
         _execCount = 0;
         return cnt;
     }
+
+    #endregion
 }
