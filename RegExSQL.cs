@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.SqlServer.Server;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Ascentis.Infrastructure;
 using Timer = System.Timers.Timer;
 
 #if UPLOCK
@@ -102,43 +103,16 @@ public class RegExCompiled
 
     protected class PooledRegexStack : ConcurrentStack<PooledRegex>
     {
-        private SpinLock _lock;
-        private TimeSpan _expireTimeSpan;
+        private readonly SpinLockedField<TimeSpan> _expireTimeSpan;
         public TimeSpan ExpireTimeSpan
         {
-            get
-            {
-                var lockTaken = false;
-                try
-                {
-                    _lock.Enter(ref lockTaken);
-                    return _expireTimeSpan;
-                }
-                finally
-                {
-                    if (lockTaken)
-                        _lock.Exit();
-                }
-            }
-            set
-            {
-                var lockTaken = false;
-                try
-                {
-                    _lock.Enter(ref lockTaken);
-                    _expireTimeSpan = value;
-                }
-                finally
-                {
-                    if (lockTaken)
-                        _lock.Exit();
-                }
-            }
+            get => _expireTimeSpan.Get();
+            set => _expireTimeSpan.Set(value);
         }
 
         internal PooledRegexStack()
         {
-            _lock = new SpinLock();
+            _expireTimeSpan = new SpinLockedField<TimeSpan>();
             Accessed();
         }
 
