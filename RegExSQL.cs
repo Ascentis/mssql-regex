@@ -58,7 +58,7 @@ public class RegExCompiled
             if (_lastExpirerRunTickcount == 0)
                 _lastExpirerRunTickcount = Environment.TickCount;
 #if UPLOCK
-            using var unLockReleaser = RegexPoolLock.EnterRead();
+            using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
             foreach (var cache in RegexPool)
             {
@@ -68,14 +68,14 @@ public class RegExCompiled
                 if (cache.Value.ExpireTimeSpan.Ticks > 0)
                     continue;
 #if UPLOCK
-                unLockReleaser.Upgrade();
+                lockReleaser.Upgrade();
                 try
                 {
                     RegexPool.Remove(cache.Key);
                 }
                 finally
                 {
-                    unLockReleaser.Downgrade();
+                    lockReleaser.Downgrade();
                 }
 #else
                 RegexPool.TryRemove(cache.Key, out var _);
