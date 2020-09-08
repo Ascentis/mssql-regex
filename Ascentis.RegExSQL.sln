@@ -20,20 +20,34 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_UpgradeableLock|Any CPU = Debug_UpgradeableLock|Any CPU
 		Debug|Any CPU = Debug|Any CPU
+		Release_UpgradeableLock|Any CPU = Release_UpgradeableLock|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Debug_UpgradeableLock|Any CPU.ActiveCfg = Debug_UpgradeableLock|Any CPU
+		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Debug_UpgradeableLock|Any CPU.Build.0 = Debug_UpgradeableLock|Any CPU
 		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Release_UpgradeableLock|Any CPU.ActiveCfg = Release_UpgradeableLock|Any CPU
+		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Release_UpgradeableLock|Any CPU.Build.0 = Release_UpgradeableLock|Any CPU
 		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3290E1D4-D91D-4F58-B66E-78964FE330E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Debug_UpgradeableLock|Any CPU.ActiveCfg = Debug_UpgradeableLock|Any CPU
+		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Debug_UpgradeableLock|Any CPU.Build.0 = Debug_UpgradeableLock|Any CPU
 		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Release_UpgradeableLock|Any CPU.ActiveCfg = Release_UpgradeableLock|Any CPU
+		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Release_UpgradeableLock|Any CPU.Build.0 = Release_UpgradeableLock|Any CPU
 		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4853827-634C-4D09-8D1A-D0831AFCBE9B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Debug_UpgradeableLock|Any CPU.ActiveCfg = Debug_UpgradeableLock|Any CPU
+		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Debug_UpgradeableLock|Any CPU.Build.0 = Debug_UpgradeableLock|Any CPU
 		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Release_UpgradeableLock|Any CPU.ActiveCfg = Release_UpgradeableLock|Any CPU
+		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Release_UpgradeableLock|Any CPU.Build.0 = Release_UpgradeableLock|Any CPU
 		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E466AA4-BDB8-4E4C-AF6A-94686B3FB440}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

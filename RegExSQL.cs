@@ -7,23 +7,146 @@ using System.Linq;
 using Microsoft.SqlServer.Server;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Timer = System.Timers.Timer;
+
+#if UPLOCK
+using System.Collections.Generic;
+using AdamMil.Utilities;
+#endif
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
 public class RegExCompiled
 {
-    private static readonly ConcurrentDictionary<string, ConcurrentStack<PooledRegex>> RegexPool;
+    private const int AutoStopTimer = 60000;
+#if DEBUG
+    private const int DefaultExpirationMilliseconds = 2000;
+    private const int CleanerTimerInterval = 100;
+#else
+    private const int DefaultExpirationMilliseconds = 60000;
+    private const int CleanerTimerInterval = 10000;
+#endif
+
+ #if UPLOCK
+    private static readonly UpgradableReadWriteLock RegexPoolLock;
+    private static readonly IDictionary<string, PooledRegexStack> RegexPool;
+#else
+    private static readonly ConcurrentDictionary<string, PooledRegexStack> RegexPool;
+#endif
+
     private static volatile int _execCount;
+    // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+    private static readonly Timer CleanerTimer;
+    private static int _lastExpirerRunTickcount;
 
     static RegExCompiled()
     {
-        RegexPool = new ConcurrentDictionary<string, ConcurrentStack<PooledRegex>>();
+#if UPLOCK
+        RegexPoolLock = new UpgradableReadWriteLock();
+        RegexPool = new Dictionary<string, PooledRegexStack>();
+#else
+        RegexPool = new ConcurrentDictionary<string, PooledRegexStack>();
+#endif
+        CleanerTimer = new Timer();
+        CleanerTimer.Elapsed += (_, e) =>
+        {
+            if (_lastExpirerRunTickcount == 0)
+                _lastExpirerRunTickcount = Environment.TickCount;
+#if UPLOCK
+            using var unLockReleaser = RegexPoolLock.EnterRead();
+#endif
+            foreach (var cache in RegexPool)
+            {
+                cache.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
+                    cache.Value.ExpireTimeSpan.TotalMilliseconds -
+                    Math.Abs(Environment.TickCount - _lastExpirerRunTickcount));
+                if (cache.Value.ExpireTimeSpan.Ticks > 0)
+                    continue;
+#if UPLOCK
+                unLockReleaser.Upgrade();
+                try
+                {
+                    RegexPool.Remove(cache.Key);
+                }
+                finally
+                {
+                    unLockReleaser.Downgrade();
+                }
+#else
+                RegexPool.TryRemove(cache.Key, out var _);
+#endif
+            }
+
+            CheckCleanerTimerShouldStop();
+            _lastExpirerRunTickcount = Environment.TickCount;
+        };
+        CleanerTimer.Interval = CleanerTimerInterval;
+    }
+
+    private static void CheckCleanerTimerShouldStop()
+    {
+        if (Math.Abs(Environment.TickCount - _lastExpirerRunTickcount) >= AutoStopTimer)
+            CleanerTimer.Stop();
+    }
+
+    private static void CheckCleanerTimerStarted()
+    {
+        if (!CleanerTimer.Enabled)
+            CleanerTimer.Start();
+    }
+
+    protected class PooledRegexStack : ConcurrentStack<PooledRegex>
+    {
+        private SpinLock _lock;
+        private TimeSpan _expireTimeSpan;
+        public TimeSpan ExpireTimeSpan
+        {
+            get
+            {
+                var lockTaken = false;
+                try
+                {
+                    _lock.Enter(ref lockTaken);
+                    return _expireTimeSpan;
+                }
+                finally
+                {
+                    if (lockTaken)
+                        _lock.Exit();
+                }
+            }
+            set
+            {
+                var lockTaken = false;
+                try
+                {
+                    _lock.Enter(ref lockTaken);
+                    _expireTimeSpan = value;
+                }
+                finally
+                {
+                    if (lockTaken)
+                        _lock.Exit();
+                }
+            }
+        }
+
+        internal PooledRegexStack()
+        {
+            _lock = new SpinLock();
+            Accessed();
+        }
+
+        public void Accessed()
+        {
+            ExpireTimeSpan = TimeSpan.FromMilliseconds(DefaultExpirationMilliseconds);
+        }
     }
 
     protected class PooledRegex : Regex, IDisposable
     {
-        private readonly ConcurrentStack<PooledRegex> _stack;
+        private readonly PooledRegexStack _stack;
 
-        internal PooledRegex(string pattern, ConcurrentStack<PooledRegex> stack) : base(pattern, RegexOptions.Compiled)
+        internal PooledRegex(string pattern, PooledRegexStack stack) : base(pattern, RegexOptions.Compiled)
         {
             _stack = stack;
         }
@@ -36,6 +159,7 @@ public class RegExCompiled
 
     protected static PooledRegex RegexAcquire(string pattern)
     {
+        CheckCleanerTimerStarted();
         Interlocked.Increment(ref _execCount);
         var stack = GetPooledRegexStack(pattern);
         if (!stack.TryPop(out var regex))
@@ -43,9 +167,26 @@ public class RegExCompiled
         return regex;
     }
 
-    private static ConcurrentStack<PooledRegex> GetPooledRegexStack(string pattern)
+    private static PooledRegexStack GetPooledRegexStack(string pattern)
     {
-        ConcurrentStack<PooledRegex> stack = RegexPool.GetOrAdd(pattern, _ => new ConcurrentStack<PooledRegex>());
+#if UPLOCK
+        PooledRegexStack stack;
+        using var lockReleaser = RegexPoolLock.EnterRead();
+        while (true)
+        {
+            if (RegexPool.TryGetValue(pattern, out stack))
+                break;
+            var firstUpgrader = lockReleaser.Upgrade();
+            if (!firstUpgrader && RegexPool.TryGetValue(pattern, out stack))
+                break;
+            stack = new PooledRegexStack();
+            RegexPool.Add(pattern, stack);
+            break;
+        }
+#else
+        var stack = RegexPool.GetOrAdd(pattern, _ => new PooledRegexStack());
+#endif
+        stack.Accessed();
         return stack;
     }
 
@@ -75,7 +216,7 @@ public class RegExCompiled
         return regex.Replace(input, replacement, count);
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName="FillRow", TableDefinition="STR NVARCHAR(MAX)")]
+    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillRow", TableDefinition = "STR NVARCHAR(MAX)")]
     public static IEnumerable RegExCompiledSplit(string input, string pattern)
     {
         using var regex = RegexAcquire(pattern);
@@ -124,7 +265,7 @@ public class RegExCompiled
         return index >= matches.Count ? "" : matches[index].Groups[group].Value;
     }
 
-    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName="FillRow", TableDefinition="STR NVARCHAR(MAX)")]
+    [SqlFunction(IsDeterministic = true, IsPrecise = true, FillRowMethodName = "FillRow", TableDefinition = "STR NVARCHAR(MAX)")]
     public static IEnumerable RegExCompiledMatches(string input, string pattern)
     {
         using var regex = RegexAcquire(pattern);
@@ -141,6 +282,9 @@ public class RegExCompiled
     [SqlFunction(IsDeterministic = true, IsPrecise = true)]
     public static int RegExCachedCount()
     {
+#if UPLOCK
+        using var lockReleaser = RegexPoolLock.EnterRead();
+#endif
         return RegexPool.Sum(stack => stack.Value.Count);
     }
 
@@ -148,6 +292,9 @@ public class RegExCompiled
     public static int RegExClearCache()
     {
         var cnt = RegexPool.Count;
+#if UPLOCK
+        using var lockReleaser = RegexPoolLock.EnterWrite();
+#endif
         RegexPool.Clear();
         return cnt;
     }

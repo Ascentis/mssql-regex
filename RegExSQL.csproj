@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>preview</LangVersion>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3021</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -32,7 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
     <NoWarn>3021</NoWarn>
   </PropertyGroup>
@@ -41,6 +41,30 @@
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>Ascentis.RegEx.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_UpgradeableLock|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug_UpgradeableLock\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;UPLOCK</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3021</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_UpgradeableLock|AnyCPU'">
+    <OutputPath>bin\Release_UpgradeableLock\</OutputPath>
+    <DefineConstants>TRACE;UPLOCK</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <NoWarn>3021</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>preview</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -51,6 +75,8 @@
   <ItemGroup>
     <Compile Include="RegExSQL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Submodules\AdamMil.net\Utilities\Interop.cs" />
+    <Compile Include="Submodules\AdamMil.net\Utilities\Threading.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Ascentis.RegEx.snk" />
@@ -58,12 +84,10 @@
   <ItemGroup>
     <Content Include="CreateAssemblyTemplate.sql" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Submodules\AdamMil.net\Utilities\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>AssemblyAsText Ascentis.RegExSQL.dll &gt; Ascentis.RegExSQL.txt
-powershell -Command "(Get-Content ..\..\CreateAssemblyTemplate.sql) -replace '&lt;BinaryDll&gt;', (Get-Content Ascentis.RegExSQL.txt)| Out-File -encoding ASCII ..\..\Published\CreateRegExAssembly.sql"</PostBuildEvent>
+powershell -Command "(Get-Content ..\..\CreateAssemblyTemplate.sql) -replace '&lt;BinaryDll&gt;', (Get-Content Ascentis.RegExSQL.txt)| Out-File -encoding ASCII ..\..\Published\CreateRegExAssembly_$(ConfigurationName).sql"</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -19,7 +19,20 @@ namespace UnitTestRegExSQL
         {
             Conn = new SqlConnection(Settings.Default.ConnectionString);
             Conn.Open();
-            var regAssemblyCommands = File.ReadAllText(@"..\..\Published\CreateRegExAssembly.sql").Split(new [] {"GO\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+#if DEBUG
+#if UPLOCK
+            var suffix = "Debug_UpgradableLock";
+#else
+            var suffix = "Debug";
+#endif
+#else 
+#if UPLOCK
+            var suffix = "Release_UpgradableLock";
+#else
+            var suffix = "Release";
+#endif
+#endif
+            var regAssemblyCommands = File.ReadAllText($@"..\..\Published\CreateRegExAssembly_{suffix}.sql").Split(new [] {"GO\r\n"}, StringSplitOptions.RemoveEmptyEntries);
             foreach (var cmdText in regAssemblyCommands)
             {
                 using var cmd = new SqlCommand(cmdText, Conn);
@@ -194,7 +207,7 @@ namespace UnitTestRegExSQL
             {
                 using var conn = new SqlConnection(Settings.Default.ConnectionString);
                 conn.Open();
-                using var cmd = new SqlCommand("SELECT TOP 200000 dbo.RegExIsMatch(MTIMEINFO, 'COMPOT4=') FROM TIME", conn);
+                using var cmd = new SqlCommand("SELECT TOP 300000 dbo.RegExIsMatch(MTIMEINFO, 'COMPOT4=') FROM TIME", conn);
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
@@ -206,8 +219,54 @@ namespace UnitTestRegExSQL
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
             stopWatch.Stop();
 
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 10000, $"Elapsed time should be lesser than 10000 ms");
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 14000, $"Elapsed time should be lesser than 10000 ms");
             Assert.IsTrue(cnt > 1000000, "cnt should be higher than 1000000");
+        }
+
+#if DEBUG
+        [TestMethod]
+#endif
+        public void TestMethodBasicForceExpire()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExClearCache()", Conn);
+            cmd.ExecuteNonQuery();
+            using var cmd2 = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'll')", Conn);
+            Assert.IsTrue((bool)cmd2.ExecuteScalar());
+            using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
+            Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
+            Thread.Sleep(1000);
+            Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
+            Thread.Sleep(2000);
+            Assert.AreEqual(0, (int)cmd3.ExecuteScalar());
+        }
+
+#if DEBUG
+        [TestMethod]
+#endif
+        public void TestRegExStressCacheMemoryWithSemiLongQuery()
+        {
+            const int parallelLevel = 8;
+
+            var cnt = 0;
+            var loopRegExAction = new Action(() =>
+            {
+                using var conn = new SqlConnection(Settings.Default.ConnectionString);
+                conn.Open();
+                using var cmd = new SqlCommand("SELECT TOP 10 dbo.RegExIsMatch(MTIMEINFO, MTIMEINFO) FROM TIME", conn);
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    if (reader.GetBoolean(0))
+                        Interlocked.Increment(ref cnt);
+                }
+            });
+            var stopWatch = Stopwatch.StartNew();
+            Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
+            stopWatch.Stop();
+
+            TestMethodBasicForceExpire();
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 10000, $"Elapsed time should be lesser than 10000 ms");
+            Assert.AreEqual(80, cnt);
         }
     }
 }
