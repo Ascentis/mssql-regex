@@ -55,6 +55,9 @@
   <ItemGroup>
     <Content Include="CreateAssemblyTemplate.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Threading\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>AssemblyAsText Ascentis.RegExSQL.dll &gt; Ascentis.RegExSQL.txt
