@@ -19,7 +19,7 @@ using AdamMil.Utilities;
 public class RegExCompiled
 {
     private const string SingleStringTableDef = "STR NVARCHAR(MAX)";
-    private const int AutoStopTimer = 60000;
+    private const int AutoStopTimer = 120000;
 #if DEBUG
     private const int DefaultExpirationMilliseconds = 2000;
     private const int CleanerTimerInterval = 100;
@@ -28,7 +28,7 @@ public class RegExCompiled
     private const int CleanerTimerInterval = 10000;
 #endif
 
- #if UPLOCK
+#if UPLOCK
     private static readonly UpgradableReadWriteLock RegexPoolLock;
     private static readonly IDictionary<RegexKey, PooledRegexStack> RegexPool;
 #else
