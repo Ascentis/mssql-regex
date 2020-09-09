@@ -273,11 +273,18 @@ namespace UnitTestRegExSQL
         [TestMethod]
         public void TestRegExStatsAndCaching()
         {
+            using var cmd3 = new SqlCommand("SELECT dbo.RegExClearCache()", Conn);
+            using var cmd7 = new SqlCommand("SELECT dbo.RegExResetCacheHitCount()", Conn);
+            cmd3.ExecuteScalar();
+            cmd7.ExecuteScalar();
             using var cmd = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'hello')", Conn);
             Assert.IsTrue((bool)cmd.ExecuteScalar());
+            using var cmd6 = new SqlCommand("SELECT dbo.RegExCacheHitCount()", Conn);
+            Assert.AreEqual(0, (int)cmd6.ExecuteScalar());
+            Assert.IsTrue((bool)cmd.ExecuteScalar());
+            Assert.AreNotEqual(0, (int)cmd6.ExecuteScalar());
             using var cmd2 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.AreNotEqual(0, (int)cmd2.ExecuteScalar());
-            using var cmd3 = new SqlCommand("SELECT dbo.RegExClearCache()", Conn);
             Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
             Assert.AreEqual(0, (int)cmd2.ExecuteScalar());
             Assert.IsTrue((bool)cmd.ExecuteScalar());

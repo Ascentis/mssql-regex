@@ -36,9 +36,11 @@ public class RegExCompiled
 #endif
 
     private static volatile int _execCount;
-    // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
+    private static volatile int _cacheHitCount;
+    private static volatile int _regExExceptionCount;
+
     private static readonly Timer CleanerTimer;
-    private static int _lastExpirerRunTickCount;
+    private static int _lastCacheCleanerRunTickCount;
 
     private class RegexKey : Tuple<string, RegexOptions>
     {
@@ -56,8 +58,8 @@ public class RegExCompiled
         CleanerTimer = new Timer();
         CleanerTimer.Elapsed += (_, e) =>
         {
-            if (_lastExpirerRunTickCount == 0)
-                _lastExpirerRunTickCount = Environment.TickCount;
+            if (_lastCacheCleanerRunTickCount == 0)
+                _lastCacheCleanerRunTickCount = Environment.TickCount;
 #if UPLOCK
             using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
@@ -65,7 +67,7 @@ public class RegExCompiled
             {
                 cache.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
                     cache.Value.ExpireTimeSpan.TotalMilliseconds -
-                    Math.Abs(Environment.TickCount - _lastExpirerRunTickCount));
+                    Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount));
                 if (cache.Value.ExpireTimeSpan.Ticks > 0)
                     continue;
 #if UPLOCK
@@ -84,14 +86,14 @@ public class RegExCompiled
             }
 
             CheckCleanerTimerShouldStop();
-            _lastExpirerRunTickCount = Environment.TickCount;
+            _lastCacheCleanerRunTickCount = Environment.TickCount;
         };
         CleanerTimer.Interval = CleanerTimerInterval;
     }
 
     private static void CheckCleanerTimerShouldStop()
     {
-        if (Math.Abs(Environment.TickCount - _lastExpirerRunTickCount) >= AutoStopTimer)
+        if (Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount) >= AutoStopTimer)
             CleanerTimer.Stop();
     }
 
@@ -155,6 +157,8 @@ public class RegExCompiled
         var stack = GetPooledRegexStack(pattern, options);
         if (!stack.TryPop(out var regex))
             regex = new PooledRegex(pattern, stack, options);
+        else
+            Interlocked.Increment(ref _cacheHitCount);
         return regex;
     }
 
@@ -442,12 +446,30 @@ public class RegExCompiled
     }
 
     [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true)]
+    public static int RegExCacheHitCount()
+    {
+        return _cacheHitCount;
+    }
+
+    [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true)]
     public static int RegExResetExecCount()
     {
         var cnt = _execCount;
         _execCount = 0;
+        return cnt;
+    }
+
+    [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true)]
+    public static int RegExResetCacheHitCount()
+    {
+        var cnt = _cacheHitCount;
+        _cacheHitCount = 0;
         return cnt;
     }
 
