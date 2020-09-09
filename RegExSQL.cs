@@ -38,7 +38,7 @@ public class RegExCompiled
     private static volatile int _execCount;
     // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
     private static readonly Timer CleanerTimer;
-    private static int _lastExpirerRunTickcount;
+    private static int _lastExpirerRunTickCount;
 
     private class RegexKey : Tuple<string, RegexOptions>
     {
@@ -56,8 +56,8 @@ public class RegExCompiled
         CleanerTimer = new Timer();
         CleanerTimer.Elapsed += (_, e) =>
         {
-            if (_lastExpirerRunTickcount == 0)
-                _lastExpirerRunTickcount = Environment.TickCount;
+            if (_lastExpirerRunTickCount == 0)
+                _lastExpirerRunTickCount = Environment.TickCount;
 #if UPLOCK
             using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
@@ -65,7 +65,7 @@ public class RegExCompiled
             {
                 cache.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
                     cache.Value.ExpireTimeSpan.TotalMilliseconds -
-                    Math.Abs(Environment.TickCount - _lastExpirerRunTickcount));
+                    Math.Abs(Environment.TickCount - _lastExpirerRunTickCount));
                 if (cache.Value.ExpireTimeSpan.Ticks > 0)
                     continue;
 #if UPLOCK
@@ -84,14 +84,14 @@ public class RegExCompiled
             }
 
             CheckCleanerTimerShouldStop();
-            _lastExpirerRunTickcount = Environment.TickCount;
+            _lastExpirerRunTickCount = Environment.TickCount;
         };
         CleanerTimer.Interval = CleanerTimerInterval;
     }
 
     private static void CheckCleanerTimerShouldStop()
     {
-        if (Math.Abs(Environment.TickCount - _lastExpirerRunTickcount) >= AutoStopTimer)
+        if (Math.Abs(Environment.TickCount - _lastExpirerRunTickCount) >= AutoStopTimer)
             CleanerTimer.Stop();
     }
 
