@@ -101,6 +101,16 @@ public class RegExCompiled
             CleanerTimer.Start();
     }
 
+    /*
+       Refrain from replacing parent class ConcurrentStack<> with ConcurrentBag<>.
+       It looks like the pattern fits the bill, after all we don't care *which* Regex object we
+       are provided as long as it's an object compiled with the same pattern and set of options.
+       Well, it appears that due to the complex logic ConcurrentBag<> has internally to optimize
+       for performance of the caller thread to Add() and Take() if there's either a lot changes
+       in the running thread (flip/flopping threads) or if there's simply a lot of threads 
+       the performance of it absolutely sucks when this is running in MSSQL context. 
+       The degradation is simply beyond belief.
+    */
     protected class PooledRegexStack : ConcurrentStack<PooledRegex>
     {
         private readonly SpinLockedField<TimeSpan> _expireTimeSpan;
