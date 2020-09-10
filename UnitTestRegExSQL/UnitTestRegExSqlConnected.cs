@@ -351,6 +351,15 @@ namespace UnitTestRegExSQL
             Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
             Thread.Sleep(2000);
             Assert.AreEqual(0, (int)cmd3.ExecuteScalar());
+            Thread.Sleep(2000);
+
+            // Let's ensure now that cleaner process started again
+            Assert.IsTrue((bool)cmd2.ExecuteScalar());
+            Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
+            Thread.Sleep(1000);
+            Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
+            Thread.Sleep(2000);
+            Assert.AreEqual(0, (int)cmd3.ExecuteScalar());
         }
 
 #if DEBUG

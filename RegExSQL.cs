@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -11,7 +12,6 @@ using Ascentis.Infrastructure;
 using Timer = System.Timers.Timer;
 
 #if UPLOCK
-using System.Collections.Generic;
 using AdamMil.Utilities;
 #endif
 
@@ -42,6 +42,7 @@ public class RegExCompiled
     /* RegEx cache expiration tracking related fields */
     private static readonly Timer CleanerTimer;
     private static int _lastCacheCleanerRunTickCount;
+    private static volatile int _lastCacheUsedMilliseconds;
     private static volatile int _cacheEntryExpirationMilliseconds = DefaultExpirationMilliseconds;
 
     private class RegexKey : Tuple<string, RegexOptions>
@@ -51,6 +52,7 @@ public class RegExCompiled
 
     static RegExCompiled()
     {
+        var inCleanerCode = false;
 #if UPLOCK
         RegexPoolLock = new UpgradableReadWriteLock();
         RegexPool = new Dictionary<RegexKey, PooledRegexStack>();
@@ -58,49 +60,71 @@ public class RegExCompiled
         RegexPool = new ConcurrentDictionary<RegexKey, PooledRegexStack>();
 #endif
         CleanerTimer = new Timer();
-        CleanerTimer.Elapsed += (_, e) =>
+        CleanerTimer.Elapsed += delegate
         {
-            if (_lastCacheCleanerRunTickCount == 0)
-                _lastCacheCleanerRunTickCount = Environment.TickCount;
-#if UPLOCK
-            using var lockReleaser = RegexPoolLock.EnterRead();
-#endif
-            foreach (var cache in RegexPool)
+            /* Nasty check to prevent re-entrancy. Timers in AutoReset mode ARE re-entrant */
+            if (inCleanerCode)
+                return;
+            inCleanerCode = true;
+            try
             {
-                cache.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
-                    cache.Value.ExpireTimeSpan.TotalMilliseconds -
-                    Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount));
-                if (cache.Value.ExpireTimeSpan.Ticks > 0)
-                    continue;
+                var currentTickCount = Environment.TickCount;
+                if (_lastCacheCleanerRunTickCount == 0)
+                {
+                    _lastCacheCleanerRunTickCount = currentTickCount;
+                    return; // Skip first run checks
+                }
 #if UPLOCK
-                lockReleaser.Upgrade();
-                try
-                {
-                    RegexPool.Remove(cache.Key);
-                }
-                finally
-                {
-                    lockReleaser.Downgrade();
-                }
-#else
-                RegexPool.TryRemove(cache.Key, out var _);
+                using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
-            }
+                var removeTargets = new List<RegexKey>();
+                foreach (var regExStackCachedItem in RegexPool)
+                {
+                    regExStackCachedItem.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
+                        regExStackCachedItem.Value.ExpireTimeSpan.TotalMilliseconds -
+                        Math.Abs(currentTickCount - _lastCacheCleanerRunTickCount));
+                    if (regExStackCachedItem.Value.ExpireTimeSpan.Ticks > 0)
+                        continue;
+                    removeTargets.Add(regExStackCachedItem.Key);
+                }
 
-            CheckCleanerTimerShouldStop();
-            _lastCacheCleanerRunTickCount = Environment.TickCount;
+                if (removeTargets.Count > 0)
+                {
+#if UPLOCK
+                    lockReleaser.Upgrade();
+#endif
+                    foreach (var regExStackCacheItemKey in removeTargets)
+                    {
+#if UPLOCK
+                        RegexPool.Remove(regExStackCacheItemKey);
+#else
+                        RegexPool.TryRemove(regExStackCacheItemKey, out var _);
+#endif
+                    }
+                }
+
+                _lastCacheCleanerRunTickCount = currentTickCount;
+                CheckCleanerTimerShouldStop(currentTickCount);
+            }
+            finally
+            {
+                inCleanerCode = false;
+            }
         };
         CleanerTimer.Interval = CleanerTimerInterval;
     }
 
-    private static void CheckCleanerTimerShouldStop()
+    private static void CheckCleanerTimerShouldStop(int currentTickCount)
     {
-        if (Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount) >= DefaultExpirationMilliseconds * 2)
-            CleanerTimer.Stop();
+        if (Math.Abs(currentTickCount - _lastCacheUsedMilliseconds) < DefaultExpirationMilliseconds * 2) 
+            return;
+        _lastCacheCleanerRunTickCount = 0;
+        CleanerTimer.Stop();
     }
 
     private static void CheckCleanerTimerStarted()
     {
+        _lastCacheUsedMilliseconds = Environment.TickCount;
         if (!CleanerTimer.Enabled)
             CleanerTimer.Start();
     }
