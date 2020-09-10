@@ -19,13 +19,12 @@ using AdamMil.Utilities;
 public class RegExCompiled
 {
     private const string SingleStringTableDef = "STR NVARCHAR(MAX)";
-    private const int AutoStopTimer = 120000;
 #if DEBUG
     private const int DefaultExpirationMilliseconds = 2000;
     private const int CleanerTimerInterval = 100;
 #else
-    private const int DefaultExpirationMilliseconds = 60000;
-    private const int CleanerTimerInterval = 10000;
+    private const int DefaultExpirationMilliseconds = 60000 * 5; // Five minutes
+    private const int CleanerTimerInterval = 10000; // Ten seconds
 #endif
 
 #if UPLOCK
@@ -35,12 +34,15 @@ public class RegExCompiled
     private static readonly ConcurrentDictionary<RegexKey, PooledRegexStack> RegexPool;
 #endif
 
-    private static volatile int _execCount;
-    private static volatile int _cacheHitCount;
-    private static volatile int _regExExceptionCount;
+    /* Stats tracking fields */
+    private static long _execCount;
+    private static long _cacheHitCount;
+    private static long _regExExceptionCount;
 
+    /* RegEx cache expiration tracking related fields */
     private static readonly Timer CleanerTimer;
     private static int _lastCacheCleanerRunTickCount;
+    private static volatile int _cacheEntryExpirationMilliseconds = DefaultExpirationMilliseconds;
 
     private class RegexKey : Tuple<string, RegexOptions>
     {
@@ -93,7 +95,7 @@ public class RegExCompiled
 
     private static void CheckCleanerTimerShouldStop()
     {
-        if (Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount) >= AutoStopTimer)
+        if (Math.Abs(Environment.TickCount - _lastCacheCleanerRunTickCount) >= DefaultExpirationMilliseconds * 2)
             CleanerTimer.Stop();
     }
 
@@ -130,7 +132,7 @@ public class RegExCompiled
 
         public void Accessed()
         {
-            ExpireTimeSpan = TimeSpan.FromMilliseconds(DefaultExpirationMilliseconds);
+            ExpireTimeSpan = TimeSpan.FromMilliseconds(_cacheEntryExpirationMilliseconds);
         }
     }
 
@@ -191,6 +193,20 @@ public class RegExCompiled
         str = new SqlString((string)row);
     }
 
+    private delegate TRet RegExApiDelegate<out TRet>();
+    private static TRet RegExApiCall<TRet>(RegExApiDelegate<TRet> apiCall)
+    {
+        try
+        {
+            return apiCall();
+        }
+        catch
+        {
+            Interlocked.Increment(ref _regExExceptionCount);
+            throw;
+        }
+    }
+
     #region Functions exported to SQL
 
     [SqlFunction(
@@ -199,8 +215,11 @@ public class RegExCompiled
     public static bool RegExCompiledIsMatchWithOptions(
         string input, string pattern, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Match(input).Success;
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Match(input).Success;
+        });
     }
 
     [SqlFunction(
@@ -227,8 +246,11 @@ public class RegExCompiled
     public static string RegExCompiledReplaceWithOptions(
         string input, string pattern, string replacement, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Replace(input, replacement);
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Replace(input, replacement);
+        });
     }
 
     [SqlFunction(
@@ -246,8 +268,11 @@ public class RegExCompiled
     public static string RegExCompiledReplaceCountWithOptions(
         string input, string pattern, string replacement, int count, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Replace(input, replacement, count);
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Replace(input, replacement, count);
+        });
     }
 
     [SqlFunction(
@@ -269,8 +294,11 @@ public class RegExCompiled
     public static IEnumerable RegExCompiledSplitWithOptions(
         string input, string pattern, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Split(input);
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Split(input);
+        });
     }
 
     [SqlFunction(
@@ -304,8 +332,11 @@ public class RegExCompiled
     public static string RegExCompiledMatchWithOptions(
         string input, string pattern, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Match(input).Value;
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions)options);
+            return regex.Match(input).Value;
+        });
     }
 
     [SqlFunction(
@@ -323,9 +354,11 @@ public class RegExCompiled
     public static string RegExCompiledMatchIndexedWithOptions(
         string input, string pattern, int index, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        var matches = regex.Matches(input);
-        return index >= matches.Count ? "" : matches[index].Value;
+        return RegExApiCall(()=> {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            var matches = regex.Matches(input);
+            return index >= matches.Count ? "" : matches[index].Value;
+        });
     }
 
     [SqlFunction(
@@ -343,8 +376,11 @@ public class RegExCompiled
     public static string RegExCompiledMatchGroupWithOptions(
         string input, string pattern, int group, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Match(input).Groups[group].Value;
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Match(input).Groups[group].Value;
+        });
     }
 
     [SqlFunction(
@@ -362,9 +398,12 @@ public class RegExCompiled
     public static string RegExCompiledMatchGroupIndexedWithOptions(
         string input, string pattern, int group, int index, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        var matches = regex.Matches(input);
-        return index >= matches.Count ? "" : matches[index].Groups[group].Value;
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            var matches = regex.Matches(input);
+            return index >= matches.Count ? "" : matches[index].Groups[group].Value;
+        });
     }
 
     [SqlFunction(
@@ -386,8 +425,11 @@ public class RegExCompiled
     public static IEnumerable RegExCompiledMatchesWithOptions(
         string input, string pattern, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Matches(input).Cast<Match>().Select(m => m.Value).ToArray();
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Matches(input).Cast<Match>().Select(m => m.Value).ToArray();
+        });
     }
 
     [SqlFunction(
@@ -409,8 +451,11 @@ public class RegExCompiled
     public static IEnumerable RegExCompiledMatchesGroupWithOptions(
         string input, string pattern, int group, int options)
     {
-        using var regex = RegexAcquire(pattern, (RegexOptions) options);
-        return regex.Matches(input).Cast<Match>().Select(m => m.Groups[group].Value).ToArray();
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions) options);
+            return regex.Matches(input).Cast<Match>().Select(m => m.Groups[group].Value).ToArray();
+        });
     }
 
     [SqlFunction(
@@ -440,37 +485,41 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true)]
-    public static int RegExExecCount()
+    public static long RegExExecCount()
     {
-        return _execCount;
+        return Interlocked.Read(ref _execCount);
     }
 
     [SqlFunction(
         IsDeterministic = true,
         IsPrecise = true)]
-    public static int RegExCacheHitCount()
+    public static long RegExCacheHitCount()
     {
-        return _cacheHitCount;
+        return Interlocked.Read(ref _cacheHitCount);
     }
 
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true)]
-    public static int RegExResetExecCount()
+    public static long RegExResetExecCount()
     {
-        var cnt = _execCount;
-        _execCount = 0;
-        return cnt;
+        return Interlocked.Exchange(ref _execCount, 0);
     }
 
     [SqlFunction(
         IsDeterministic = true,
         IsPrecise = true)]
-    public static int RegExResetCacheHitCount()
+    public static long RegExResetCacheHitCount()
     {
-        var cnt = _cacheHitCount;
-        _cacheHitCount = 0;
-        return cnt;
+        return Interlocked.Exchange(ref _cacheHitCount, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true)]
+    public static int RegExSetCacheEntryExpirationMilliseconds(int cacheEntryExpirationMilliseconds)
+    {
+        return Interlocked.Exchange(ref _cacheEntryExpirationMilliseconds, cacheEntryExpirationMilliseconds);
     }
 
     #endregion

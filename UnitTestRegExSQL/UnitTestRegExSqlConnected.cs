@@ -267,7 +267,7 @@ namespace UnitTestRegExSQL
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
-            Assert.IsTrue((int)cmd4.ExecuteScalar() >= parallelLevel * loopCount * 2, $"(int)cmd2.ExecuteScalar() > {parallelLevel * loopCount * 2}");
+            Assert.IsTrue((long)cmd4.ExecuteScalar() >= parallelLevel * loopCount * 2, $"(int)cmd2.ExecuteScalar() > {parallelLevel * loopCount * 2}");
         }
 
         [TestMethod]
@@ -280,9 +280,9 @@ namespace UnitTestRegExSQL
             using var cmd = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'hello')", Conn);
             Assert.IsTrue((bool)cmd.ExecuteScalar());
             using var cmd6 = new SqlCommand("SELECT dbo.RegExCacheHitCount()", Conn);
-            Assert.AreEqual(0, (int)cmd6.ExecuteScalar());
+            Assert.AreEqual(0, (long)cmd6.ExecuteScalar());
             Assert.IsTrue((bool)cmd.ExecuteScalar());
-            Assert.AreNotEqual(0, (int)cmd6.ExecuteScalar());
+            Assert.AreNotEqual(0, (long)cmd6.ExecuteScalar());
             using var cmd2 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.AreNotEqual(0, (int)cmd2.ExecuteScalar());
             Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
@@ -291,10 +291,10 @@ namespace UnitTestRegExSQL
             Assert.IsTrue((bool)cmd.ExecuteScalar());
             Assert.AreEqual(1, (int)cmd2.ExecuteScalar());
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
-            Assert.AreNotEqual(0, (int)cmd4.ExecuteScalar());
+            Assert.AreNotEqual(0, (long)cmd4.ExecuteScalar());
             using var cmd5 = new SqlCommand("SELECT dbo.RegExResetExecCount()", Conn);
-            Assert.AreNotEqual(0, (int)cmd5.ExecuteScalar());
-            Assert.AreEqual(0, (int)cmd4.ExecuteScalar());
+            Assert.AreNotEqual(0, (long)cmd5.ExecuteScalar());
+            Assert.AreEqual(0, (long)cmd4.ExecuteScalar());
         }
 
         [TestMethod]
@@ -330,6 +330,8 @@ namespace UnitTestRegExSQL
         {
             using var cmd = new SqlCommand("SELECT dbo.RegExClearCache()", Conn);
             cmd.ExecuteNonQuery();
+            using var cmd4 = new SqlCommand("SELECT dbo.RegExSetCacheEntryExpirationMilliseconds(1200)", Conn);
+            Assert.AreNotEqual(0, cmd4.ExecuteNonQuery());
             using var cmd2 = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'll')", Conn);
             Assert.IsTrue((bool)cmd2.ExecuteScalar());
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
