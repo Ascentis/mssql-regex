@@ -48,6 +48,17 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExExceptionCount()
+        {
+            using var cmd = new SqlCommand("SELECT dbo.RegExResetExceptionCount()", Conn);
+            cmd.ExecuteScalar();
+            using var cmd2 = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'he(llo')", Conn);
+            Assert.ThrowsException<SqlException>(() => cmd2.ExecuteScalar());
+            using var cmd3 = new SqlCommand("SELECT dbo.RegExExceptionCount()", Conn);
+            Assert.AreEqual(1, (long)cmd3.ExecuteScalar());
+        }
+
+        [TestMethod]
         public void TestRegExIsMatchWithOptions()
         {
             using var cmd = new SqlCommand("SELECT dbo.RegExIsMatchWithOptions('hello', 'hello', 1)", Conn);

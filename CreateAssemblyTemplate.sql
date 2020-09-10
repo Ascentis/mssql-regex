@@ -233,6 +233,13 @@ GO
 
 IF EXISTS (SELECT *
            FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExExceptionCount]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExExceptionCount
+GO
+
+IF EXISTS (SELECT *
+           FROM   sys.objects
            WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetExecCount]')
                   AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
 	DROP FUNCTION RegExResetExecCount
@@ -243,6 +250,13 @@ IF EXISTS (SELECT *
            WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetCacheHitCount]')
                   AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
 	DROP FUNCTION RegExResetCacheHitCount
+GO
+
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetExceptionCount]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExResetExceptionCount
 GO
 
 IF EXISTS (SELECT *
@@ -488,12 +502,20 @@ CREATE FUNCTION RegExCacheHitCount()
 RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheHitCount
 GO
 
+CREATE FUNCTION RegExExceptionCount()
+RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExceptionCount
+GO
+
 CREATE FUNCTION RegExResetExecCount()
 RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExecCount
 GO
 
 CREATE FUNCTION RegExResetCacheHitCount()
 RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetCacheHitCount
+GO
+
+CREATE FUNCTION RegExResetExceptionCount()
+RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExceptionCount
 GO
 
 CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(

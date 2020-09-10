@@ -499,6 +499,14 @@ public class RegExCompiled
     }
 
     [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true)]
+    public static long RegExExceptionCount()
+    {
+        return Interlocked.Read(ref _regExExceptionCount);
+    }
+
+    [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true)]
     public static long RegExResetExecCount()
@@ -512,6 +520,14 @@ public class RegExCompiled
     public static long RegExResetCacheHitCount()
     {
         return Interlocked.Exchange(ref _cacheHitCount, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true)]
+    public static long RegExResetExceptionCount()
+    {
+        return Interlocked.Exchange(ref _regExExceptionCount, 0);
     }
 
     [SqlFunction(
