@@ -382,7 +382,8 @@ public class RegExCompiled
     public static string RegExCompiledMatchIndexedWithOptions(
         string input, string pattern, int index, int options)
     {
-        return RegExApiCall(()=> {
+        return RegExApiCall(() => 
+        {
             using var regex = RegexAcquire(pattern, (RegexOptions) options);
             var matches = regex.Matches(input);
             return index >= matches.Count ? "" : matches[index].Value;
