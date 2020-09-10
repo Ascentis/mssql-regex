@@ -52,14 +52,19 @@ public class RegExCompiled
 
     static RegExCompiled()
     {
-        var inCleanerCode = false;
 #if UPLOCK
         RegexPoolLock = new UpgradableReadWriteLock();
         RegexPool = new Dictionary<RegexKey, PooledRegexStack>();
 #else
         RegexPool = new ConcurrentDictionary<RegexKey, PooledRegexStack>();
 #endif
-        CleanerTimer = new Timer();
+        CleanerTimer = new Timer {Interval = CleanerTimerInterval};
+        BuildCacheCleanerTimerDelegate();
+    }
+
+    private static void BuildCacheCleanerTimerDelegate()
+    {
+        var inCleanerCode = false;
         CleanerTimer.Elapsed += delegate
         {
             /* Nasty check to prevent re-entrancy. Timers in AutoReset mode ARE re-entrant */
@@ -111,7 +116,6 @@ public class RegExCompiled
                 inCleanerCode = false;
             }
         };
-        CleanerTimer.Interval = CleanerTimerInterval;
     }
 
     private static void CheckCleanerTimerShouldStop(int currentTickCount)
