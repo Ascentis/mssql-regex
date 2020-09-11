@@ -16,35 +16,118 @@ Methods to reset the stats are provided.
 For general reference on regular expression language as supported by Microsoft see: https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference
 For reference on Regex class see: https://docs.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regex?view=netframework-4.6.1
 
-Functions exposed:
+### Functions exposed:
 
-CREATE FUNCTION RegExIsMatch(@input nvarchar(max), @pattern nvarchar(max)) RETURNS bit
-CREATE FUNCTION RegExIsMatchWithOptions(@input nvarchar(max), @pattern nvarchar(max), @options int) RETURNS bit
-CREATE FUNCTION RegExMatch(@input nvarchar(max), @pattern nvarchar(max)) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchWithOptions(@input nvarchar(max), @pattern nvarchar(max), @options int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchIndexed(@input nvarchar(max), @pattern nvarchar(max), @index int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchIndexedWithOptions(@input nvarchar(max), @pattern nvarchar(max), @index int, @options int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchGroup( @input nvarchar(max), @pattern nvarchar(max), @group int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchGroupWithOptions(@input nvarchar(max), @pattern nvarchar(max), @group int, @options int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchGroupIndexed(@input nvarchar(max), @pattern nvarchar(max), @group int, @index int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExMatchGroupIndexedWithOptions(@input nvarchar(max), @pattern nvarchar(max), @group int, @index int, @options int) RETURNS nvarchar(max)
+#### Matching functions returning a scalar value:
+```sql
+CREATE FUNCTION RegExIsMatch(
+    @input nvarchar(max), 
+    @pattern nvarchar(max)) RETURNS bit
+CREATE FUNCTION RegExIsMatchWithOptions(
+    @input nvarchar(max), 
+    @pattern nvarchar(max), 
+    @options int) RETURNS bit
+CREATE FUNCTION RegExMatch(
+    @input nvarchar(max), 
+    @pattern nvarchar(max)) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchWithOptions(
+    @input nvarchar(max), 
+    @pattern nvarchar(max), 
+    @options int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchIndexed(
+    @input nvarchar(max), 
+    @pattern nvarchar(max), 
+    @index int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchIndexedWithOptions(
+    @input nvarchar(max), 
+    @pattern nvarchar(max), 
+    @index int, 
+    @options int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchGroup(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @group int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchGroupWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @group int,
+    @options int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchGroupIndexed(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @group int,
+    @index int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExMatchGroupIndexedWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @group int,
+    @index int,
+    @options int) RETURNS nvarchar(max)
+```
 
-CREATE FUNCTION RegExReplace(@input nvarchar(max), @pattern nvarchar(max), @replacement nvarchar(max)) RETURNS nvarchar(max)
-CREATE FUNCTION RegExReplaceWithOptions(@input nvarchar(max), @pattern nvarchar(max), @replacement nvarchar(max), @options int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExReplaceCount(@input nvarchar(max), @pattern nvarchar(max), @replacement nvarchar(max), @count int) RETURNS nvarchar(max)
-CREATE FUNCTION RegExReplaceCountWithOptions(@input nvarchar(max), @pattern nvarchar(max), @replacement nvarchar(max), @count int, @options int) RETURNS nvarchar(max)
+#### Replacement functions
+```sql
+CREATE FUNCTION RegExReplace(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @replacement nvarchar(max)) RETURNS nvarchar(max)
+CREATE FUNCTION RegExReplaceWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @replacement nvarchar(max),
+    @options int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExReplaceCount(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @replacement nvarchar(max),
+    @count int) RETURNS nvarchar(max)
+CREATE FUNCTION RegExReplaceCountWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @replacement nvarchar(max),
+    @count int,
+    @options int) RETURNS nvarchar(max)
+```
 
-CREATE FUNCTION RegExSplit(@input nvarchar(max), @pattern nvarchar(max)) RETURNS TABLE (ITEM NVARCHAR(MAX))
-CREATE FUNCTION RegExSplitWithOptions(@input nvarchar(max),	@pattern nvarchar(max), @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+#### String splitting functions
+```sql
+CREATE FUNCTION RegExSplit(
+    @input nvarchar(max),
+    @pattern nvarchar(max)) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExSplitWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+```
 
-CREATE FUNCTION RegExMatches(@input nvarchar(max), @pattern nvarchar(max)) RETURNS TABLE (ITEM NVARCHAR(MAX))
-CREATE FUNCTION RegExMatchesWithOptions(@input nvarchar(max), @pattern nvarchar(max), @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
-CREATE FUNCTION RegExMatchesGroup(@input nvarchar(max),	@pattern nvarchar(max),	@group int) RETURNS TABLE (ITEM NVARCHAR(MAX))
-CREATE FUNCTION RegExMatchesGroupWithOptions(@input nvarchar(max), @pattern nvarchar(max), @group int, @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+#### Matchting functions returning all matches as a table
+```sql
+CREATE FUNCTION RegExMatches(
+    @input nvarchar(max),
+    @pattern nvarchar(max)) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExMatchesWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExMatchesGroup(
+    @input nvarchar(max),  
+    @pattern nvarchar(max),
+    @group int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExMatchesGroupWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),
+    @group int,
+    @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+```
 
+#### Escape and unescape string functions
+```sql
 CREATE FUNCTION RegExEscape(@input nvarchar(max)) RETURNS NVARCHAR(MAX)
 CREATE FUNCTION RegExUnescape(@input nvarchar(max)) RETURNS NVARCHAR(MAX)
+```
 
+#### Statistic and diagnostics collection functions
+```sql
 CREATE FUNCTION RegExCachedCount() RETURNS INT
 CREATE FUNCTION RegExClearCache() RETURNS INT
 CREATE FUNCTION RegExExecCount() RETURNS BIGINT
@@ -53,16 +136,19 @@ CREATE FUNCTION RegExExceptionCount() RETURNS BIGINT
 CREATE FUNCTION RegExResetExecCount() RETURNS BIGINT
 CREATE FUNCTION RegExResetCacheHitCount() RETURNS BIGINT
 CREATE FUNCTION RegExResetExceptionCount() RETURNS BIGINT
-CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(@cacheEntryExpirationMilliseconds int) RETURNS INT
+CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(
+    @cacheEntryExpirationMilliseconds int) RETURNS INT
 CREATE FUNCTION RegExCacheList() RETURNS TABLE (
     PATTERN NVARCHAR(MAX), 
     OPTIONS INT, 
     CACHEREGEXCOUNT INT,
     TTL INT
 )
+```
 
-Enum used for regex functions that receive @options parameter:
+#### Enum used for regex functions that receive @options parameter:
 
+```CSharp
 public enum RegexOptions
   {
     /// Specifies that no options are set. For more information about the default behavior of the regular expression engine, 
@@ -107,3 +193,4 @@ public enum RegexOptions
     /// see the "Comparison Using the Invariant Culture" section in the Regular Expression Options topic.
      CultureInvariant = 512, // 0x00000200
   }
+```
