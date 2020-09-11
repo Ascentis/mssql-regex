@@ -506,7 +506,7 @@ BEGIN
     BEGIN
         THROW 50001, 'Something is wrong with regex library. Expected matches calling RegExMatches(). Test failed', 1;
     END
-    PRINT 'Test passed'
+    PRINT 'Test passed';
 END
 ELSE
 BEGIN
