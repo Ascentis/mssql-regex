@@ -53,6 +53,7 @@ namespace UnitTestRegExSQL
             using var cmd = new SqlCommand("SELECT dbo.RegExResetExceptionCount()", Conn);
             cmd.ExecuteScalar();
             using var cmd2 = new SqlCommand("SELECT dbo.RegExIsMatch('hello', 'he(llo')", Conn);
+            // ReSharper disable once AccessToDisposedClosure
             Assert.ThrowsException<SqlException>(() => cmd2.ExecuteScalar());
             using var cmd3 = new SqlCommand("SELECT dbo.RegExExceptionCount()", Conn);
             Assert.AreEqual(1, (long)cmd3.ExecuteScalar());
@@ -306,6 +307,12 @@ namespace UnitTestRegExSQL
             using var cmd5 = new SqlCommand("SELECT dbo.RegExResetExecCount()", Conn);
             Assert.AreNotEqual(0, (long)cmd5.ExecuteScalar());
             Assert.AreEqual(0, (long)cmd4.ExecuteScalar());
+            using var cmd8 = new SqlCommand("SELECT * FROM dbo.RegExCacheList()", Conn);
+            using var reader = cmd8.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            Assert.AreEqual("hello", reader.GetString(0));
+            Assert.AreEqual(0, reader.GetInt32(1));
+            Assert.AreEqual(1, reader.GetInt32(2));
         }
 
         [TestMethod]

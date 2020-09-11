@@ -266,6 +266,13 @@ IF EXISTS (SELECT *
 	DROP FUNCTION RegExSetCacheEntryExpirationMilliseconds
 GO
 
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCacheList]')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+	DROP FUNCTION RegExCacheList
+GO
+
 IF EXISTS (select *
 	from sys.assembly_files f
 	full outer join  sys.assemblies a
@@ -522,5 +529,13 @@ CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(
     @cacheEntryExpirationMilliseconds int
 )
 RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExSetCacheEntryExpirationMilliseconds
+GO
+
+CREATE FUNCTION RegExCacheList()
+RETURNS TABLE (
+    PATTERN NVARCHAR(MAX), 
+    OPTIONS INT, 
+    CACHEREGEXCOUNT INT,
+    TTL INT) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheList
 GO
 

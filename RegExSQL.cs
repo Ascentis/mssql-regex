@@ -18,7 +18,12 @@ using AdamMil.Utilities;
 [SuppressMessage("ReSharper", "CheckNamespace")]
 public class RegExCompiled
 {
-    private const string SingleStringTableDef = "STR NVARCHAR(MAX)";
+    private const string SingleStringTableDef = "Str nvarchar(max)";
+    private const string CachedRegExTableDef = @"
+        Pattern nvarchar(max), 
+        Options int, 
+        RegExCacheCount int,
+        Ttl int";
 #if DEBUG
     private const int DefaultExpirationMilliseconds = 2000;
     private const int CleanerTimerInterval = 100;
@@ -45,9 +50,11 @@ public class RegExCompiled
     private static volatile int _lastCacheUsedMilliseconds;
     private static volatile int _cacheEntryExpirationMilliseconds = DefaultExpirationMilliseconds;
 
-    private class RegexKey : Tuple<string, RegexOptions>
+    internal class RegexKey : Tuple<string, RegexOptions>
     {
         internal RegexKey(string pattern, RegexOptions options) : base(pattern, options) { }
+        internal string Pattern => Item1;
+        internal RegexOptions Options => Item2;
     }
 
     static RegExCompiled()
@@ -216,9 +223,31 @@ public class RegExCompiled
         return stack;
     }
 
-    public static void FillRow(object row, out SqlString str)
+    public static void FillRowSingleString(object row, out SqlString str)
     {
         str = new SqlString((string)row);
+    }
+
+    internal class CachedRegExEntry
+    {
+        internal string Pattern;
+        internal int Options;
+        internal int Count;
+        internal int Ttl;
+    }
+
+    public static void FillRowCachedRegEx(
+        object row, 
+        out SqlString pattern, 
+        out int options, 
+        out int cacheCount,
+        out int ttl)
+    {
+        var cachedRegExEntry = (CachedRegExEntry) row;
+        pattern = new SqlString(cachedRegExEntry.Pattern);
+        options = cachedRegExEntry.Options;
+        cacheCount = cachedRegExEntry.Count;
+        ttl = cachedRegExEntry.Ttl;
     }
 
     private delegate TRet RegExApiDelegate<out TRet>();
@@ -306,7 +335,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledSplit(
         string input, string pattern)
@@ -317,7 +346,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledSplitWithOptions(
         string input, string pattern, int options)
@@ -438,7 +467,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledMatches(
         string input, string pattern)
@@ -449,7 +478,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledMatchesWithOptions(
         string input, string pattern, int options)
@@ -464,7 +493,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledMatchesGroup(
         string input, string pattern, int group)
@@ -475,7 +504,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true, 
         IsPrecise = true, 
-        FillRowMethodName = nameof(FillRow), 
+        FillRowMethodName = nameof(FillRowSingleString), 
         TableDefinition = SingleStringTableDef)]
     public static IEnumerable RegExCompiledMatchesGroupWithOptions(
         string input, string pattern, int group, int options)
@@ -487,9 +516,7 @@ public class RegExCompiled
         });
     }
 
-    [SqlFunction(
-        IsDeterministic = true, 
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static int RegExCachedCount()
     {
 #if UPLOCK
@@ -498,9 +525,7 @@ public class RegExCompiled
         return RegexPool.Sum(stack => stack.Value.Count);
     }
 
-    [SqlFunction(
-        IsDeterministic = true, 
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static int RegExClearCache()
     {
         var cnt = RegexPool.Count;
@@ -511,60 +536,61 @@ public class RegExCompiled
         return cnt;
     }
 
-    [SqlFunction(
-        IsDeterministic = true, 
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExExecCount()
     {
         return Interlocked.Read(ref _execCount);
     }
 
-    [SqlFunction(
-        IsDeterministic = true,
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExCacheHitCount()
     {
         return Interlocked.Read(ref _cacheHitCount);
     }
 
-    [SqlFunction(
-        IsDeterministic = true,
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExExceptionCount()
     {
         return Interlocked.Read(ref _regExExceptionCount);
     }
 
-    [SqlFunction(
-        IsDeterministic = true, 
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExResetExecCount()
     {
         return Interlocked.Exchange(ref _execCount, 0);
     }
 
-    [SqlFunction(
-        IsDeterministic = true,
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExResetCacheHitCount()
     {
         return Interlocked.Exchange(ref _cacheHitCount, 0);
     }
 
-    [SqlFunction(
-        IsDeterministic = true,
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static long RegExResetExceptionCount()
     {
         return Interlocked.Exchange(ref _regExExceptionCount, 0);
     }
 
-    [SqlFunction(
-        IsDeterministic = true,
-        IsPrecise = true)]
+    [SqlFunction(IsPrecise = true)]
     public static int RegExSetCacheEntryExpirationMilliseconds(int cacheEntryExpirationMilliseconds)
     {
         return Interlocked.Exchange(ref _cacheEntryExpirationMilliseconds, cacheEntryExpirationMilliseconds);
+    }
+
+    [SqlFunction(
+        IsPrecise = true,
+        FillRowMethodName = nameof(FillRowCachedRegEx),
+        TableDefinition = CachedRegExTableDef)]
+    public static IEnumerable RegExCacheList()
+    {
+        return RegexPool.Select(regExCacheEntry => new CachedRegExEntry
+        {
+            Pattern = regExCacheEntry.Key.Pattern,
+            Options = (int) regExCacheEntry.Key.Options,
+            Count = regExCacheEntry.Value.Count,
+            Ttl = (int)regExCacheEntry.Value.ExpireTimeSpan.TotalMilliseconds
+        });
     }
 
     #endregion
