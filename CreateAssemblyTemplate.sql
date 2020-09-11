@@ -245,259 +245,259 @@ BEGIN
     DECLARE @CreateFnCommand nvarchar(max) = '';
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExIsMatch( 
-      @input nvarchar(max),
-      @pattern nvarchar(max)
-    )
-    RETURNS bit EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledIsMatch;';
+        CREATE FUNCTION RegExIsMatch( 
+          @input nvarchar(max),
+          @pattern nvarchar(max)
+        )
+        RETURNS bit EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledIsMatch;';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExIsMatchWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @options int
-    )
-    RETURNS bit EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledIsMatchWithOptions';
+        CREATE FUNCTION RegExIsMatchWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @options int
+        )
+        RETURNS bit EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledIsMatchWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatch( 
-      @input nvarchar(max),
-      @pattern nvarchar(max)  
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatch'
+        CREATE FUNCTION RegExMatch( 
+          @input nvarchar(max),
+          @pattern nvarchar(max)  
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatch'
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchWithOptions'
+        CREATE FUNCTION RegExMatchWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchWithOptions'
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchIndexed( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @index int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchIndexed';
+        CREATE FUNCTION RegExMatchIndexed( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @index int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchIndexed';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchIndexedWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @index int,
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchIndexedWithOptions';
+        CREATE FUNCTION RegExMatchIndexedWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @index int,
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchIndexedWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchGroup( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @group int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroup';
+        CREATE FUNCTION RegExMatchGroup( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @group int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroup';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchGroupWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @group int,
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupWithOptions';
+        CREATE FUNCTION RegExMatchGroupWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @group int,
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchGroupIndexed( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @group int,
-      @index int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupIndexed';
+        CREATE FUNCTION RegExMatchGroupIndexed( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @group int,
+          @index int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupIndexed';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchGroupIndexedWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @group int,
-      @index int,
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupIndexedWithOptions';
+        CREATE FUNCTION RegExMatchGroupIndexedWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @group int,
+          @index int,
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchGroupIndexedWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExReplace( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @replacement nvarchar(max)
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplace';
+        CREATE FUNCTION RegExReplace( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @replacement nvarchar(max)
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplace';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExReplaceWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @replacement nvarchar(max),
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceWithOptions';
+        CREATE FUNCTION RegExReplaceWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @replacement nvarchar(max),
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExReplaceCount( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @replacement nvarchar(max),
-      @count int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceCount';
+        CREATE FUNCTION RegExReplaceCount( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @replacement nvarchar(max),
+          @count int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExReplaceCountWithOptions( 
-      @input nvarchar(max),
-      @pattern nvarchar(max),
-      @replacement nvarchar(max),
-      @count int,
-      @options int
-    )
-    RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceCountWithOptions';
+        CREATE FUNCTION RegExReplaceCountWithOptions( 
+          @input nvarchar(max),
+          @pattern nvarchar(max),
+          @replacement nvarchar(max),
+          @count int,
+          @options int
+        )
+        RETURNS nvarchar(max) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledReplaceCountWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExSplit(
-        @input nvarchar(max),
-        @pattern nvarchar(max)
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplit';
+        CREATE FUNCTION RegExSplit(
+            @input nvarchar(max),
+            @pattern nvarchar(max)
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplit';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExSplitWithOptions(
-        @input nvarchar(max),
-        @pattern nvarchar(max),
-        @options int
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplitWithOptions';
+        CREATE FUNCTION RegExSplitWithOptions(
+            @input nvarchar(max),
+            @pattern nvarchar(max),
+            @options int
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplitWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExEscape(
-        @input nvarchar(max)
-    )
-    RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledEscape';
+        CREATE FUNCTION RegExEscape(
+            @input nvarchar(max)
+        )
+        RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledEscape';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExUnescape(
-        @input nvarchar(max)
-    )
-    RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledUnescape';
+        CREATE FUNCTION RegExUnescape(
+            @input nvarchar(max)
+        )
+        RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledUnescape';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatches(
-        @input nvarchar(max),
-        @pattern nvarchar(max)
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatches';
+        CREATE FUNCTION RegExMatches(
+            @input nvarchar(max),
+            @pattern nvarchar(max)
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatches';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchesWithOptions(
-        @input nvarchar(max),
-        @pattern nvarchar(max),
-        @options int
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesWithOptions';
+        CREATE FUNCTION RegExMatchesWithOptions(
+            @input nvarchar(max),
+            @pattern nvarchar(max),
+            @options int
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchesGroup(
-        @input nvarchar(max),
-        @pattern nvarchar(max),
-        @group int
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroup';
+        CREATE FUNCTION RegExMatchesGroup(
+            @input nvarchar(max),
+            @pattern nvarchar(max),
+            @group int
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroup';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExMatchesGroupWithOptions(
-        @input nvarchar(max),
-        @pattern nvarchar(max),
-        @group int,
-        @options int
-    )
-    RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupWithOptions';
+        CREATE FUNCTION RegExMatchesGroupWithOptions(
+            @input nvarchar(max),
+            @pattern nvarchar(max),
+            @group int,
+            @options int
+        )
+        RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExCachedCount()
-    RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCachedCount';
+        CREATE FUNCTION RegExCachedCount()
+        RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCachedCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExClearCache()
-    RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExClearCache';
+        CREATE FUNCTION RegExClearCache()
+        RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExClearCache';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExExecCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExecCount';
+        CREATE FUNCTION RegExExecCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExecCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExCacheHitCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheHitCount';
+        CREATE FUNCTION RegExCacheHitCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheHitCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExExceptionCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExceptionCount';
+        CREATE FUNCTION RegExExceptionCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExExceptionCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExResetExecCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExecCount';
+        CREATE FUNCTION RegExResetExecCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExecCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExResetCacheHitCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetCacheHitCount';
+        CREATE FUNCTION RegExResetCacheHitCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetCacheHitCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExResetExceptionCount()
-    RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExceptionCount';
+        CREATE FUNCTION RegExResetExceptionCount()
+        RETURNS BIGINT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExResetExceptionCount';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(
-        @cacheEntryExpirationMilliseconds int
-    )
-    RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExSetCacheEntryExpirationMilliseconds';
+        CREATE FUNCTION RegExSetCacheEntryExpirationMilliseconds(
+            @cacheEntryExpirationMilliseconds int
+        )
+        RETURNS INT EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExSetCacheEntryExpirationMilliseconds';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
-    CREATE FUNCTION RegExCacheList()
-    RETURNS TABLE (
-        PATTERN NVARCHAR(MAX), 
-        OPTIONS INT, 
-        CACHEREGEXCOUNT INT,
-        TTL INT) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheList';
+        CREATE FUNCTION RegExCacheList()
+        RETURNS TABLE (
+            PATTERN NVARCHAR(MAX), 
+            OPTIONS INT, 
+            CACHEREGEXCOUNT INT,
+            TTL INT) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheList';
     EXEC sp_executesql @CreateFnCommand;
 
     PRINT 'Testing our regex library...'
