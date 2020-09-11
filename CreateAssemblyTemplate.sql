@@ -10,7 +10,8 @@ SELECT @hash = HASHBYTES('SHA2_512', @asmBin);
 
 IF NOT EXISTS (select *
                from sys.assembly_files f
-               where HASHBYTES('SHA2_512', f.content) <> @hash)
+               where HASHBYTES('SHA2_512', f.content) = @hash
+                     AND f.name = @clrName)
 BEGIN	
     PRINT 'Dropping regex functions';
     IF EXISTS (SELECT *
