@@ -12,7 +12,7 @@ IF NOT EXISTS (select *
                from sys.assembly_files f
                where HASHBYTES('SHA2_512', f.content) <> @hash)
 BEGIN	
-    PRINT 'Dropping regex functions'
+    PRINT 'Dropping regex functions';
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExIsMatch]')
@@ -241,7 +241,7 @@ BEGIN
     FROM @asmBin
     WITH PERMISSION_SET = UNSAFE;
 
-    PRINT 'Creating function stubs'
+    PRINT 'Creating function stubs';
     DECLARE @CreateFnCommand nvarchar(max) = '';
 
     SET @CreateFnCommand = '
