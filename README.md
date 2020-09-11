@@ -14,7 +14,10 @@ The library provides a set of functions to inspect the status of the cache and t
 Methods to reset the stats are provided.
 
 For general reference on regular expression language as supported by Microsoft see: https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference
+
 For reference on Regex class see: https://docs.microsoft.com/en-us/dotnet/api/system.text.regularexpressions.regex?view=netframework-4.6.1
+
+Nuget repo with packaged up ready made .sql scripts: https://www.nuget.org/packages/Ascentis.RegExSQL/
 
 ### Functions exposed:
 
