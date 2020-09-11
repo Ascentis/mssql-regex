@@ -231,12 +231,12 @@ BEGIN
         FROM sys.trusted_assemblies
         WHERE description = 'Ascentis.RegExSql';
 
-        EXEC sp_executesql @UnTrustAssembliesCmd
+        EXEC sp_executesql @UnTrustAssembliesCmd;
     END;
 
     EXEC sys.sp_add_trusted_assembly @hash = @hash, @description = @clrName;
 
-    PRINT 'Pushing our assembly into the database'
+    PRINT 'Pushing our assembly into the database';
     CREATE ASSEMBLY [Ascentis.RegExSQL]
     FROM @asmBin
     WITH PERMISSION_SET = UNSAFE;
