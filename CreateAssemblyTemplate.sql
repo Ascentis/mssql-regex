@@ -1,6 +1,6 @@
 ﻿/* Source code for the library at: https://github.com/Ascentis/mssql-regex */
 
-PRINT 'Checking if regex package already exists...'
+PRINT 'Checking if regex package already exists...';
 
 DECLARE @clrName nvarchar(4000) = 'Ascentis.RegExSql';
 DECLARE @asmBin varbinary(max) = <BinaryDll>;
@@ -12,236 +12,236 @@ IF NOT EXISTS (select *
                from sys.assembly_files f
                where HASHBYTES('SHA2_512', f.content) <> @hash)
 BEGIN	
-	PRINT 'Dropping regex functions'
+    PRINT 'Dropping regex functions'
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExIsMatch]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExIsMatch;
+        DROP FUNCTION RegExIsMatch;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExIsMatchWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExIsMatchWithOptions;
+        DROP FUNCTION RegExIsMatchWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatch]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatch;
+        DROP FUNCTION RegExMatch;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchWithOptions;
+        DROP FUNCTION RegExMatchWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchIndexed]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchIndexed;
+        DROP FUNCTION RegExMatchIndexed;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchIndexedWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchIndexedWithOptions;
+        DROP FUNCTION RegExMatchIndexedWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExSplit]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExSplit;
+        DROP FUNCTION RegExSplit;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExSplitWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExSplitWithOptions;
+        DROP FUNCTION RegExSplitWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExReplace]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExReplace;
+        DROP FUNCTION RegExReplace;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExReplaceWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExReplaceWithOptions;
+        DROP FUNCTION RegExReplaceWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExReplaceCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExReplaceCount;
+        DROP FUNCTION RegExReplaceCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExReplaceCountWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExReplaceCountWithOptions;
+        DROP FUNCTION RegExReplaceCountWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExEscape]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExEscape;
+        DROP FUNCTION RegExEscape;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExUnescape]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExUnescape;
+        DROP FUNCTION RegExUnescape;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatches]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatches;
+        DROP FUNCTION RegExMatches;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchesWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchesWithOptions;
+        DROP FUNCTION RegExMatchesWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchGroup]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchGroup;
+        DROP FUNCTION RegExMatchGroup;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchGroupWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchGroupWithOptions;
+        DROP FUNCTION RegExMatchGroupWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchGroupIndexed]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchGroupIndexed;
+        DROP FUNCTION RegExMatchGroupIndexed;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchGroupIndexedWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchGroupIndexedWithOptions;
+        DROP FUNCTION RegExMatchGroupIndexedWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchesGroup]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchesGroup;
+        DROP FUNCTION RegExMatchesGroup;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchesGroupWithOptions]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExMatchesGroupWithOptions;
+        DROP FUNCTION RegExMatchesGroupWithOptions;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCachedCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExCachedCount;
+        DROP FUNCTION RegExCachedCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCacheHitCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExCacheHitCount;
+        DROP FUNCTION RegExCacheHitCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExClearCache]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExClearCache;
+        DROP FUNCTION RegExClearCache;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExExecCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExExecCount;
+        DROP FUNCTION RegExExecCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExExceptionCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExExceptionCount;
+        DROP FUNCTION RegExExceptionCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetExecCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExResetExecCount;
+        DROP FUNCTION RegExResetExecCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetCacheHitCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExResetCacheHitCount;
+        DROP FUNCTION RegExResetCacheHitCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExResetExceptionCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExResetExceptionCount;
+        DROP FUNCTION RegExResetExceptionCount;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExSetCacheEntryExpirationMilliseconds]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExSetCacheEntryExpirationMilliseconds;
+        DROP FUNCTION RegExSetCacheEntryExpirationMilliseconds;
 
     IF EXISTS (SELECT *
                FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCacheList]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
-	    DROP FUNCTION RegExCacheList;
+        DROP FUNCTION RegExCacheList;
 
-	PRINT 'Dropping existing assemblies matching name "Ascentis.RegExQL"'
+    PRINT 'Dropping existing assemblies matching name "Ascentis.RegExQL"'
     IF EXISTS (select *
-	    from sys.assembly_files f
-	    full outer join  sys.assemblies a
-		    on f.assembly_id=a.assembly_id
-	    where a.name ='Ascentis.RegExSQL')
-	    DROP ASSEMBLY [Ascentis.RegExSQL];
+        from sys.assembly_files f
+        full outer join  sys.assemblies a
+            on f.assembly_id=a.assembly_id
+        where a.name ='Ascentis.RegExSQL')
+        DROP ASSEMBLY [Ascentis.RegExSQL];
 
-	PRINT 'Resetting CLR Security to "Enabled"'
+    PRINT 'Resetting CLR Security to "Enabled"'
     IF EXISTS(SELECT *
-		      from sys.configurations	
-		      where name = 'clr strict security' and value = 0)
-	    EXEC SP_CONFIGURE 'clr strict security', 1;
+              from sys.configurations	
+              where name = 'clr strict security' and value = 0)
+        EXEC SP_CONFIGURE 'clr strict security', 1;
 
     RECONFIGURE;
 
-	PRINT 'Adding our assembly to list of trusted assemblies'
+    PRINT 'Adding our assembly to list of trusted assemblies'
     IF EXISTS(SELECT * from sys.trusted_assemblies
-	  	      WHERE description = 'Ascentis.RegExSql')
+              WHERE description = 'Ascentis.RegExSql')
     BEGIN
-	    DECLARE @UnTrustAssembliesCmd nvarchar(max) = '';
+        DECLARE @UnTrustAssembliesCmd nvarchar(max) = '';
 
-	    SELECT @UnTrustAssembliesCmd = @UnTrustAssembliesCmd + 'EXEC sys.sp_drop_trusted_assembly @hash = ' + CONVERT(varchar(max), hash, 1) + ';' 
-	    FROM sys.trusted_assemblies
-	    WHERE description = 'Ascentis.RegExSql';
+        SELECT @UnTrustAssembliesCmd = @UnTrustAssembliesCmd + 'EXEC sys.sp_drop_trusted_assembly @hash = ' + CONVERT(varchar(max), hash, 1) + ';' 
+        FROM sys.trusted_assemblies
+        WHERE description = 'Ascentis.RegExSql';
 
-	    EXEC sp_executesql @UnTrustAssembliesCmd
+        EXEC sp_executesql @UnTrustAssembliesCmd
     END;
 
     EXEC sys.sp_add_trusted_assembly @hash = @hash, @description = @clrName;
 
-	PRINT 'Pushing our assembly into the database'
+    PRINT 'Pushing our assembly into the database'
     CREATE ASSEMBLY [Ascentis.RegExSQL]
     FROM @asmBin
     WITH PERMISSION_SET = UNSAFE;
 
-	PRINT 'Creating function stubs'
+    PRINT 'Creating function stubs'
     DECLARE @CreateFnCommand nvarchar(max) = '';
 
     SET @CreateFnCommand = '
@@ -379,16 +379,16 @@ BEGIN
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExSplit(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max)
+        @input nvarchar(max),
+        @pattern nvarchar(max)
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplit';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExSplitWithOptions(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max),
+        @input nvarchar(max),
+        @pattern nvarchar(max),
         @options int
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledSplitWithOptions';
@@ -396,30 +396,30 @@ BEGIN
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExEscape(
-	    @input nvarchar(max)
+        @input nvarchar(max)
     )
     RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledEscape';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExUnescape(
-	    @input nvarchar(max)
+        @input nvarchar(max)
     )
     RETURNS NVARCHAR(MAX) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledUnescape';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExMatches(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max)
+        @input nvarchar(max),
+        @pattern nvarchar(max)
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatches';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExMatchesWithOptions(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max),
+        @input nvarchar(max),
+        @pattern nvarchar(max),
         @options int
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesWithOptions';
@@ -427,18 +427,18 @@ BEGIN
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExMatchesGroup(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max),
-	    @group int
+        @input nvarchar(max),
+        @pattern nvarchar(max),
+        @group int
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroup';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '
     CREATE FUNCTION RegExMatchesGroupWithOptions(
-	    @input nvarchar(max),
-	    @pattern nvarchar(max),
-	    @group int,
+        @input nvarchar(max),
+        @pattern nvarchar(max),
+        @group int,
         @options int
     )
     RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupWithOptions';
@@ -500,15 +500,15 @@ BEGIN
         TTL INT) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheList';
     EXEC sp_executesql @CreateFnCommand;
 
-	PRINT 'Testing our regex library...'
-	IF NOT EXISTS(SELECT * 
-		          FROM dbo.RegExMatches('SM1,M 29,B 13', '(^|,)(E372|M 29|E275|B 13)((?=,)|(?=$))'))
-	BEGIN
-		THROW 50001, 'Something is wrong with regex library. Expected matches calling RegExMatches(). Test failed', 1;
-	END
-	PRINT 'Test passed'
+    PRINT 'Testing our regex library...'
+    IF NOT EXISTS(SELECT * 
+                  FROM dbo.RegExMatches('SM1,M 29,B 13', '(^|,)(E372|M 29|E275|B 13)((?=,)|(?=$))'))
+    BEGIN
+        THROW 50001, 'Something is wrong with regex library. Expected matches calling RegExMatches(). Test failed', 1;
+    END
+    PRINT 'Test passed'
 END
 ELSE
 BEGIN
-	PRINT 'Assembly already exists. Exiting';
+    PRINT 'Assembly already exists. Exiting';
 END
