@@ -77,6 +77,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Submodules\AdamMil.net\Utilities\Interop.cs" />
     <Compile Include="Submodules\AdamMil.net\Utilities\Threading.cs" />
+    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\StackedBag\ConcurrentStackedBagSlim.cs" />
+    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\StackedBag\IConcurrentBag.cs" />
+    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\StackedBag\IConcurrentStack.cs" />
     <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Threading\SpinLockedField.cs" />
   </ItemGroup>
   <ItemGroup>

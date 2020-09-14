@@ -34,9 +34,9 @@ public class RegExCompiled
 
 #if UPLOCK
     private static readonly UpgradableReadWriteLock RegexPoolLock;
-    private static readonly IDictionary<RegexKey, PooledRegexStack> RegexPool;
+    private static readonly IDictionary<RegexKey, PooledRegexBag> RegexPool;
 #else
-    private static readonly ConcurrentDictionary<RegexKey, PooledRegexStack> RegexPool;
+    private static readonly ConcurrentDictionary<RegexKey, PooledRegexBag> RegexPool;
 #endif
 
     /* Stats tracking fields */
@@ -61,9 +61,9 @@ public class RegExCompiled
     {
 #if UPLOCK
         RegexPoolLock = new UpgradableReadWriteLock();
-        RegexPool = new Dictionary<RegexKey, PooledRegexStack>();
+        RegexPool = new Dictionary<RegexKey, PooledRegexBag>();
 #else
-        RegexPool = new ConcurrentDictionary<RegexKey, PooledRegexStack>();
+        RegexPool = new ConcurrentDictionary<RegexKey, PooledRegexBag>();
 #endif
         CleanerTimer = new Timer {Interval = CleanerTimerInterval};
         BuildCacheCleanerTimerDelegate();
@@ -90,14 +90,14 @@ public class RegExCompiled
                 using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
                 var removeTargets = new List<RegexKey>();
-                foreach (var regExStackCachedItem in RegexPool)
+                foreach (var regExBagCachedItem in RegexPool)
                 {
-                    regExStackCachedItem.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
-                        regExStackCachedItem.Value.ExpireTimeSpan.TotalMilliseconds -
+                    regExBagCachedItem.Value.ExpireTimeSpan = TimeSpan.FromMilliseconds(
+                        regExBagCachedItem.Value.ExpireTimeSpan.TotalMilliseconds -
                         Math.Abs(currentTickCount - _lastCacheCleanerRunTickCount));
-                    if (regExStackCachedItem.Value.ExpireTimeSpan.Ticks > 0)
+                    if (regExBagCachedItem.Value.ExpireTimeSpan.Ticks > 0)
                         continue;
-                    removeTargets.Add(regExStackCachedItem.Key);
+                    removeTargets.Add(regExBagCachedItem.Key);
                 }
 
                 if (removeTargets.Count > 0)
@@ -105,12 +105,12 @@ public class RegExCompiled
 #if UPLOCK
                     lockReleaser.Upgrade();
 #endif
-                    foreach (var regExStackCacheItemKey in removeTargets)
+                    foreach (var regExBagCacheItemKey in removeTargets)
                     {
 #if UPLOCK
-                        RegexPool.Remove(regExStackCacheItemKey);
+                        RegexPool.Remove(regExBagCacheItemKey);
 #else
-                        RegexPool.TryRemove(regExStackCacheItemKey, out var _);
+                        RegexPool.TryRemove(regExBagCacheItemKey, out var _);
 #endif
                     }
                 }
@@ -140,17 +140,7 @@ public class RegExCompiled
             CleanerTimer.Start();
     }
 
-    /*
-       Refrain from replacing parent class ConcurrentStack<> with ConcurrentBag<>.
-       It looks like the pattern fits the bill, after all we don't care *which* Regex object we
-       are provided as long as it's an object compiled with the same pattern and set of options.
-       Well, it appears that due to the complex logic ConcurrentBag<> has internally to optimize
-       for performance of the caller thread to Add() and Take() if there's either a lot changes
-       in the running thread (flip/flopping threads) or if there's simply a lot of threads 
-       the performance of it absolutely sucks when this is running in MSSQL context. 
-       The degradation is simply beyond belief.
-    */
-    protected class PooledRegexStack : ConcurrentStack<PooledRegex>
+    protected class PooledRegexBag : ConcurrentBagSlim<PooledRegex>
     {
         private readonly SpinLockedField<TimeSpan> _expireTimeSpan;
         public TimeSpan ExpireTimeSpan
@@ -159,7 +149,7 @@ public class RegExCompiled
             set => _expireTimeSpan.Set(value);
         }
 
-        internal PooledRegexStack()
+        internal PooledRegexBag()
         {
             _expireTimeSpan = new SpinLockedField<TimeSpan>();
             Accessed();
@@ -173,17 +163,17 @@ public class RegExCompiled
 
     protected class PooledRegex : Regex, IDisposable
     {
-        private readonly PooledRegexStack _stack;
+        private readonly PooledRegexBag _bag;
 
-        internal PooledRegex(string pattern, PooledRegexStack stack, RegexOptions options) 
+        internal PooledRegex(string pattern, PooledRegexBag bag, RegexOptions options) 
             : base(pattern, RegexOptions.Compiled | options)
         {
-            _stack = stack;
+            _bag = bag;
         }
 
         public void Dispose()
         {
-            _stack.Push(this);
+            _bag.Push(this);
         }
     }
 
@@ -191,36 +181,36 @@ public class RegExCompiled
     {
         CheckCleanerTimerStarted();
         Interlocked.Increment(ref _execCount);
-        var stack = GetPooledRegexStack(pattern, options);
-        if (!stack.TryPop(out var regex))
-            regex = new PooledRegex(pattern, stack, options);
+        var bag = GetPooledRegexBag(pattern, options);
+        if (!bag.TryTake(out var regex))
+            regex = new PooledRegex(pattern, bag, options);
         else
             Interlocked.Increment(ref _cacheHitCount);
         return regex;
     }
 
-    private static PooledRegexStack GetPooledRegexStack(string pattern, RegexOptions options)
+    private static PooledRegexBag GetPooledRegexBag(string pattern, RegexOptions options)
     {
 #if UPLOCK
-        PooledRegexStack stack;
+        PooledRegexBag bag;
         using var lockReleaser = RegexPoolLock.EnterRead();
         while (true)
         {
             var key = new RegexKey(pattern, options);
-            if (RegexPool.TryGetValue(key, out stack))
+            if (RegexPool.TryGetValue(key, out bag))
                 break;
             var firstUpgrader = lockReleaser.Upgrade();
-            if (!firstUpgrader && RegexPool.TryGetValue(key, out stack))
+            if (!firstUpgrader && RegexPool.TryGetValue(key, out bag))
                 break;
-            stack = new PooledRegexStack();
-            RegexPool.Add(key, stack);
+            bag = new PooledRegexBag();
+            RegexPool.Add(key, bag);
             break;
         }
 #else
-        var stack = RegexPool.GetOrAdd(new RegexKey(pattern, options), _ => new PooledRegexStack());
+        var bag = RegexPool.GetOrAdd(new RegexKey(pattern, options), _ => new PooledRegexBag());
 #endif
-        stack.Accessed();
-        return stack;
+        bag.Accessed();
+        return bag;
     }
 
     public static void FillRowSingleString(object row, out SqlString str)
@@ -522,7 +512,7 @@ public class RegExCompiled
 #if UPLOCK
         using var lockReleaser = RegexPoolLock.EnterRead();
 #endif
-        return RegexPool.Sum(stack => stack.Value.Count);
+        return RegexPool.Sum(bag => bag.Value.Count);
     }
 
     [SqlFunction(IsPrecise = true)]
