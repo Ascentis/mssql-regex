@@ -499,17 +499,18 @@ BEGIN
             OPTIONS INT, 
             CACHEREGEXCOUNT INT,
             TTL INT) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCacheList';
-    EXEC sp_executesql @CreateFnCommand;
-
-    PRINT 'Testing our regex library...'
-    IF NOT EXISTS(SELECT * 
-                  FROM dbo.RegExMatches('SM1,M 29,B 13', '(^|,)(E372|M 29|E275|B 13)((?=,)|(?=$))'))
-    BEGIN
-        THROW 50001, 'Something is wrong with regex library. Expected matches calling RegExMatches(). Test failed', 1;
-    END
-    PRINT 'Test passed';
+    EXEC sp_executesql @CreateFnCommand;    
 END
 ELSE
 BEGIN
     PRINT 'Assembly already exists. Exiting';
 END
+GO
+
+PRINT 'Testing our regex library...'
+IF NOT EXISTS(SELECT * 
+              FROM dbo.RegExMatches('SM1,M 29,B 13', '(^|,)(E372|M 29|E275|B 13)((?=,)|(?=$))'))
+BEGIN
+    THROW 50001, 'Something is wrong with regex library. Expected matches calling RegExMatches(). Test failed', 1;
+END
+PRINT 'Test passed';
