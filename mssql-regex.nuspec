@@ -2,10 +2,11 @@
 <package >
   <metadata>
     <id>Ascentis.RegExSQL</id>
-    <version>1.1.2.11</version>
+    <version>1.1.2.12</version>
     <authors>Jose Sebastian Battig</authors>
     <owners>Ascentis</owners>
     <license type="expression">MIT</license>
+    <icon>Ascentis.png</icon>
     <projectUrl>https://github.com/Ascentis/mssql-regex</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.NET assembly to use regular expressions within MSSQL</description>
@@ -25,5 +26,6 @@
     <file src="Published\CreateRegExAssembly_Debug_UpgradeableLock.sql" target="lib\net40" />
     <file src="Published\CreateRegExAssembly_Release.sql" target="lib\net40" />
     <file src="Published\CreateRegExAssembly_Release_UpgradeableLock.sql" target="lib\net40" />
+    <file src="Ascentis.png" target="" />
   </files>
 </package>
