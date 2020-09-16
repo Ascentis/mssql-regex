@@ -140,7 +140,7 @@ public class RegExCompiled
             CleanerTimer.Start();
     }
 
-    protected class PooledRegexBag : ConcurrentBagSlim<PooledRegex>
+    protected class PooledRegexBag : ConcurrentStackedBagSlim<PooledRegex>
     {
         private readonly SpinLockedField<TimeSpan> _expireTimeSpan;
         public TimeSpan ExpireTimeSpan
@@ -173,7 +173,7 @@ public class RegExCompiled
 
         public void Dispose()
         {
-            _bag.Push(this);
+            _bag.Add(this);
         }
     }
 

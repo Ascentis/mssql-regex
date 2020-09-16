@@ -10,6 +10,7 @@ namespace UnitTestRegExSQL
         public void TestMethodBasic()
         {
             Assert.IsTrue(RegExCompiled.RegExCompiledIsMatch("hello", "ll"));
+            Assert.IsTrue(RegExCompiled.RegExCompiledIsMatch("hello", "ll"));
         }
 
 #if DEBUG

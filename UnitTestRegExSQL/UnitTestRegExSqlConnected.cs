@@ -275,7 +275,7 @@ namespace UnitTestRegExSQL
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
             stopWatch.Stop();
 
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount, $"Elapsed time should be lesser than {loopCount}ms");
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount + 2000, $"Elapsed time should be lesser than {loopCount + 2000}ms");
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
@@ -337,7 +337,7 @@ namespace UnitTestRegExSQL
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
             stopWatch.Stop();
 
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 14000, $"Elapsed time should be lesser than 10000 ms");
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 14000, $"Elapsed time should be lesser than 14000 ms");
             Assert.IsTrue(cnt > 1000000, "cnt should be higher than 1000000");
         }
 

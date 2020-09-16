@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>Ascentis.RegExSQL</id>
-    <version>1.1.1.9</version>
+    <version>1.1.2.10</version>
     <authors>Jose Sebastian Battig</authors>
     <owners>Ascentis</owners>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/Ascentis/mssql-regex</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.NET assembly to use regular expressions within MSSQL</description>
-    <releaseNotes>First release</releaseNotes>
+    <releaseNotes>Refined release using custom ConcurrentStack to keep track of cached regex</releaseNotes>
     <copyright>Copyright 2020, Ascentis Corporation</copyright>
     <tags>regex mssql</tags>
     <dependencies>
