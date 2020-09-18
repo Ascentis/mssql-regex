@@ -77,8 +77,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Submodules\AdamMil.net\Utilities\Interop.cs" />
     <Compile Include="Submodules\AdamMil.net\Utilities\Threading.cs" />
-    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\Base\ConcurrentCollectionSlim.cs" />
-    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\Base\BaseNodeSlim.cs" />
+    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\Base\BaseLinkedNode.cs" />
+    <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\Base\ConcurrentLinkedNodeCollection.cs" />
     <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\IConcurrentBag.cs" />
     <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\IConcurrentQueue.cs" />
     <Compile Include="Submodules\Infrastructure\Ascentis.Infrastructure\Patterns\Concurrent\SlimCollections\IConcurrentStack.cs" />
