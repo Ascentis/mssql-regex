@@ -103,7 +103,7 @@ CREATE FUNCTION RegExSplitWithOptions(
     @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
 ```
 
-#### Matchting functions returning all matches as a table
+#### Matching functions returning all matches as a table
 ```sql
 CREATE FUNCTION RegExMatches(
     @input nvarchar(max),
@@ -172,7 +172,7 @@ public enum RegexOptions
     /// Specifies that the only valid captures are explicitly named or numbered groups 
     /// of the form. 
     /// This allows unnamed parentheses to act as noncapturing groups without the 
-    /// syntactic clumsiness of the expression (?:…). For more information, see the 
+    /// syntactic clumsiness of the expression (?:â€¦). For more information, see the 
     /// "Explicit Captures Only" section in the Regular Expression Options topic. 
      ExplicitCapture = 4,
 
