@@ -19,6 +19,15 @@ For reference on Regex class see: https://docs.microsoft.com/en-us/dotnet/api/sy
 
 Nuget repo with packaged up ready made .sql scripts: https://www.nuget.org/packages/Ascentis.RegExSQL/
 
+IMPORTANT: Please notice when installing this package in production you will want to run the following command in your database:
+
+```sql
+GRANT UNSAFE ASSEMBLY TO "you_login"
+```
+
+You need to run that command against all logins that may need to load this assembly, otherwise you will end up with warnings in the SQL logs each time this assembly is used given the fact it's marked unsafe.
+
+
 ### Functions exposed:
 
 #### Matching functions returning a scalar value:
