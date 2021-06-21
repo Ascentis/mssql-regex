@@ -244,11 +244,11 @@ namespace UnitTestRegExSQL
             using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupsWithOptions('hellomyworld', '(l+)', 1)", Conn);
             using var reader = cmd.ExecuteReader();
             Assert.IsTrue(reader.Read());
-            var val = reader.GetSqlString(2);
+            var val = reader.GetSqlString(3);
             Assert.AreEqual("ll", val);
             Assert.IsTrue(reader.Read());
             Assert.IsTrue(reader.Read());
-            val = reader.GetSqlString(2);
+            val = reader.GetSqlString(3);
             Assert.AreEqual("l", val);
             Assert.IsTrue(reader.Read());
             Assert.IsFalse(reader.Read());
@@ -260,11 +260,11 @@ namespace UnitTestRegExSQL
             using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroups('hellomyworld', '(l+)')", Conn);
             using var reader = cmd.ExecuteReader();
             Assert.IsTrue(reader.Read());
-            var val = reader.GetSqlString(2);
+            var val = reader.GetSqlString(3);
             Assert.AreEqual("ll", val);
             Assert.IsTrue(reader.Read());
             Assert.IsTrue(reader.Read());
-            val = reader.GetSqlString(2);
+            val = reader.GetSqlString(3);
             Assert.AreEqual("l", val);
             Assert.IsTrue(reader.Read());
             Assert.IsFalse(reader.Read());

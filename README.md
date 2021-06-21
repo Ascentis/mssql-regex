@@ -249,18 +249,17 @@ The example expects to columns: first column represent values for key named "key
 ```sql
 SELECT MAX(Key1) Key1, MAX(Key2) Key2
 FROM (
-    SELECT RowGrp, [2] Key1, [3] Key2
+    SELECT RowGrp, Key1, Key2
     FROM (		
-        SELECT MatchNum, GrpNum, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpNum) RowGrp
+        SELECT GrpName, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpName) RowGrp
         FROM (
-            SELECT MatchNum, GrpNum, Item, IIF(GrpNum = 4 AND Item = ';', 1, 0) RowGrp
-            FROM dbo.RegExMatchesGroups('key1=1,key2=2,;key2=3;key1=4;', '(((?<=key1=)\d+(?=,)?)*((?<=key2=)\d+(?=,)?)*)(;)?')
+            SELECT MatchNum, GrpName, Item, IIF(GrpName = 'sc' AND Item = ';', 1, 0) RowGrp
+            FROM dbo.RegExMatchesGroups('key1=1,key2=2,key1=5;key2=3,key1=10;key1=4;', '((?<key1>(?<=key1=)\d+(?=,)?)*(?<key2>(?<=key2=)\d+(?=,)?)*)(?<sc>;(?=.+))?')			
         ) _
     ) _
     PIVOT (
-        MAX(Item) FOR GrpNum IN ([2], [3])
+        MAX(Item) FOR GrpName IN (key1, key2)
     ) _
 ) _
-WHERE Key1 <> '' OR Key2 <> ''
 GROUP BY RowGrp
 ```

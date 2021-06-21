@@ -466,6 +466,7 @@ BEGIN
         RETURNS TABLE (
             MatchNum int,
             GrpNum int,
+            GrpName nvarchar(255),
             Item NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupsWithOptions';
     EXEC sp_executesql @CreateFnCommand;
 
@@ -477,6 +478,7 @@ BEGIN
         RETURNS TABLE (
             MatchNum int,
             GrpNum int,
+            GrpName nvarchar(255),
             Item NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroups';
     EXEC sp_executesql @CreateFnCommand;
 

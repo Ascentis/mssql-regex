@@ -22,6 +22,7 @@ public class RegExCompiled
     private const string StringsTableDef = @"
         MatchNum int,
         GrpNum int,
+        GrpName nvarchar(255),
         Item nvarchar(max)";
     private const string CachedRegExTableDef = @"
         Pattern nvarchar(max), 
@@ -226,17 +227,20 @@ public class RegExCompiled
     {
         internal int MatchNum;
         internal int GrpNum;
+        internal string GrpName;
         internal string Item;
     }
 
-    public static void FillRowStrings(object row, 
+    public static void FillGroupMatch(object row, 
         out int matchNum,
         out int grpNum,
+        out string grpName,
         out SqlString item)
     {
         var stringsRow = (StringsRow) row;
         matchNum = stringsRow.MatchNum;
         grpNum = stringsRow.GrpNum;
+        grpName = stringsRow.GrpName;
         item = new SqlString(stringsRow.Item);
     }
 
@@ -531,7 +535,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true,
         IsPrecise = true,
-        FillRowMethodName = nameof(FillRowStrings),
+        FillRowMethodName = nameof(FillGroupMatch),
         TableDefinition = StringsTableDef)]
     public static IEnumerable RegExCompiledMatchesGroups(
         string input, string pattern)
@@ -542,7 +546,7 @@ public class RegExCompiled
     [SqlFunction(
         IsDeterministic = true,
         IsPrecise = true,
-        FillRowMethodName = nameof(FillRowStrings),
+        FillRowMethodName = nameof(FillGroupMatch),
         TableDefinition = StringsTableDef)]
     public static IEnumerable RegExCompiledMatchesGroupsWithOptions(
         string input, string pattern, int options)
@@ -559,8 +563,9 @@ public class RegExCompiled
                     from Group grpMatch in match.Groups 
                     select new StringsRow
                     {
-                        MatchNum = matchNumber, 
-                        GrpNum = grpNumber++, 
+                        MatchNum = matchNumber,
+                        GrpName = regex.GroupNameFromNumber(grpNumber),
+                        GrpNum = grpNumber++,
                         Item = grpMatch.Value
                     });
                 matchNumber++;
