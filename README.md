@@ -137,6 +137,7 @@ CREATE FUNCTION RegExMatchesGroups(
     @pattern nvarchar(max)) RETURNS TABLE (
         MatchNum int,
         GrpNum int,
+        GrpName nvarchar(255),
         Item NVARCHAR(MAX))
 CREATE FUNCTION RegExMatchesGroupWithOptions(
     @input nvarchar(max),
@@ -149,6 +150,7 @@ CREATE FUNCTION RegExMatchesGroupsWithOptions(
     @options int) RETURNS TABLE (
         MatchNum int,
         GrpNum int,
+        GrpName nvarchar(255),
         Item NVARCHAR(MAX))
 ```
 
