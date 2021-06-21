@@ -25,6 +25,13 @@ IMPORTANT: Please notice when installing this package in production you will wan
 GRANT UNSAFE ASSEMBLY TO "you_login"
 ```
 
+It's also required to have CLR enabled in the target database:
+
+```sql
+EXEC sp_configure 'clr enabled', 1
+RECONFIGURE
+```
+
 You need to run that command against all logins that may need to load this assembly, otherwise you will end up with warnings in the SQL logs each time this assembly is used given the fact it's marked unsafe.
 
 
@@ -125,11 +132,24 @@ CREATE FUNCTION RegExMatchesGroup(
     @input nvarchar(max),  
     @pattern nvarchar(max),
     @group int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExMatchesGroups(
+    @input nvarchar(max),  
+    @pattern nvarchar(max)) RETURNS TABLE (
+        MatchNum int,
+        GrpNum int,
+        Item NVARCHAR(MAX))
 CREATE FUNCTION RegExMatchesGroupWithOptions(
     @input nvarchar(max),
     @pattern nvarchar(max),
     @group int,
     @options int) RETURNS TABLE (ITEM NVARCHAR(MAX))
+CREATE FUNCTION RegExMatchesGroupsWithOptions(
+    @input nvarchar(max),
+    @pattern nvarchar(max),    
+    @options int) RETURNS TABLE (
+        MatchNum int,
+        GrpNum int,
+        Item NVARCHAR(MAX))
 ```
 
 #### Escape and unescape string functions
@@ -221,4 +241,26 @@ public enum RegexOptions
     /// Options topic.
      CultureInvariant = 512, // 0x00000200
   }
+```
+
+Example SQL to parse a tabke if key-value pairs, separated by commands and rows separates by semi-colons.
+The example expects to columns: first column represent values for key named "key1" while the second column shows values for key named "key2".
+
+```sql
+SELECT MAX(Key1) Key1, MAX(Key2) Key2
+FROM (
+    SELECT RowGrp, [2] Key1, [3] Key2
+    FROM (		
+        SELECT MatchNum, GrpNum, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpNum) RowGrp
+        FROM (
+            SELECT MatchNum, GrpNum, Item, IIF(GrpNum = 4 AND Item = ';', 1, 0) RowGrp
+            FROM dbo.RegExMatchesGroups('key1=1,key2=2,;key2=3;key1=4;', '(((?<=key1=)\d+(?=,)?)*((?<=key2=)\d+(?=,)?)*)(;)?')
+        ) _
+    ) _
+    PIVOT (
+        MAX(Item) FOR GrpNum IN ([2], [3])
+    ) _
+) _
+WHERE Key1 <> '' OR Key2 <> ''
+GROUP BY RowGrp
 ```

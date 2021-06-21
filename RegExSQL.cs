@@ -19,6 +19,10 @@ using AdamMil.Utilities;
 public class RegExCompiled
 {
     private const string SingleStringTableDef = "Str nvarchar(max)";
+    private const string StringsTableDef = @"
+        MatchNum int,
+        GrpNum int,
+        Item nvarchar(max)";
     private const string CachedRegExTableDef = @"
         Pattern nvarchar(max), 
         Options int, 
@@ -216,6 +220,24 @@ public class RegExCompiled
     public static void FillRowSingleString(object row, out SqlString str)
     {
         str = new SqlString((string)row);
+    }
+
+    internal class StringsRow
+    {
+        internal int MatchNum;
+        internal int GrpNum;
+        internal string Item;
+    }
+
+    public static void FillRowStrings(object row, 
+        out int matchNum,
+        out int grpNum,
+        out SqlString item)
+    {
+        var stringsRow = (StringsRow) row;
+        matchNum = stringsRow.MatchNum;
+        grpNum = stringsRow.GrpNum;
+        item = new SqlString(stringsRow.Item);
     }
 
     internal class CachedRegExEntry
@@ -503,6 +525,47 @@ public class RegExCompiled
         {
             using var regex = RegexAcquire(pattern, (RegexOptions) options);
             return regex.Matches(input).Cast<Match>().Select(m => m.Groups[group].Value).ToArray();
+        });
+    }
+
+    [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true,
+        FillRowMethodName = nameof(FillRowStrings),
+        TableDefinition = StringsTableDef)]
+    public static IEnumerable RegExCompiledMatchesGroups(
+        string input, string pattern)
+    {
+        return RegExCompiledMatchesGroupsWithOptions(input, pattern, 0);
+    }
+
+    [SqlFunction(
+        IsDeterministic = true,
+        IsPrecise = true,
+        FillRowMethodName = nameof(FillRowStrings),
+        TableDefinition = StringsTableDef)]
+    public static IEnumerable RegExCompiledMatchesGroupsWithOptions(
+        string input, string pattern, int options)
+    {
+        return RegExApiCall(() =>
+        {
+            using var regex = RegexAcquire(pattern, (RegexOptions)options);
+            var matchesList = new List<StringsRow>();
+            var matchNumber = 0;
+            foreach (Match match in regex.Matches(input))
+            {
+                var grpNumber = 0;
+                matchesList.AddRange(
+                    from Group grpMatch in match.Groups 
+                    select new StringsRow
+                    {
+                        MatchNum = matchNumber, 
+                        GrpNum = grpNumber++, 
+                        Item = grpMatch.Value
+                    });
+                matchNumber++;
+            } 
+            return matchesList;
         });
     }
 

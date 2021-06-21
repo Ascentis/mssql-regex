@@ -148,6 +148,18 @@ BEGIN
 
     IF EXISTS (SELECT *
                FROM   sys.objects
+               WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchesGroups]')
+                      AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+        DROP FUNCTION RegExMatchesGroups;
+
+    IF EXISTS (SELECT *
+               FROM   sys.objects
+               WHERE  object_id = OBJECT_ID(N'[dbo].[RegExMatchesGroupsWithOptions]')
+                      AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+        DROP FUNCTION RegExMatchesGroupsWithOptions;
+
+    IF EXISTS (SELECT *
+               FROM   sys.objects
                WHERE  object_id = OBJECT_ID(N'[dbo].[RegExCachedCount]')
                       AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
         DROP FUNCTION RegExCachedCount;
@@ -443,6 +455,29 @@ BEGIN
             @options int
         )
         RETURNS TABLE (ITEM NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupWithOptions';
+    EXEC sp_executesql @CreateFnCommand;
+
+    SET @CreateFnCommand = '
+        CREATE FUNCTION RegExMatchesGroupsWithOptions(
+            @input nvarchar(max),
+            @pattern nvarchar(max),      
+            @options int
+        )
+        RETURNS TABLE (
+            MatchNum int,
+            GrpNum int,
+            Item NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroupsWithOptions';
+    EXEC sp_executesql @CreateFnCommand;
+
+    SET @CreateFnCommand = '
+        CREATE FUNCTION RegExMatchesGroups(
+            @input nvarchar(max),
+            @pattern nvarchar(max)            
+        )
+        RETURNS TABLE (
+            MatchNum int,
+            GrpNum int,
+            Item NVARCHAR(MAX)) EXTERNAL NAME [Ascentis.RegExSQL].RegExCompiled.RegExCompiledMatchesGroups';
     EXEC sp_executesql @CreateFnCommand;
 
     SET @CreateFnCommand = '

@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ConnectionString" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Server=vm-pc-sql02;Database=NEU14270_200509_Seba;Trusted_Connection=True;</Value>
+      <Value Profile="(Default)">Server=mvddevhr\mvddevhr;Database=sbattig_mssqlregex_testdb;Trusted_Connection=True;</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -239,6 +239,38 @@ namespace UnitTestRegExSQL
         }
 
         [TestMethod]
+        public void TestRegExMatchesGroupsWithOptions()
+        {
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupsWithOptions('hellomyworld', '(l+)', 1)", Conn);
+            using var reader = cmd.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            var val = reader.GetSqlString(2);
+            Assert.AreEqual("ll", val);
+            Assert.IsTrue(reader.Read());
+            Assert.IsTrue(reader.Read());
+            val = reader.GetSqlString(2);
+            Assert.AreEqual("l", val);
+            Assert.IsTrue(reader.Read());
+            Assert.IsFalse(reader.Read());
+        }
+
+        [TestMethod]
+        public void TestRegExMatchesGroups()
+        {
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroups('hellomyworld', '(l+)')", Conn);
+            using var reader = cmd.ExecuteReader();
+            Assert.IsTrue(reader.Read());
+            var val = reader.GetSqlString(2);
+            Assert.AreEqual("ll", val);
+            Assert.IsTrue(reader.Read());
+            Assert.IsTrue(reader.Read());
+            val = reader.GetSqlString(2);
+            Assert.AreEqual("l", val);
+            Assert.IsTrue(reader.Read());
+            Assert.IsFalse(reader.Read());
+        }
+
+        [TestMethod]
         public void TestRegExMatchesGroupWithOptions()
         {
             using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupWithOptions('heLLomyworLd', '(l+)', 1, 1)", Conn);
@@ -275,7 +307,7 @@ namespace UnitTestRegExSQL
             Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
             stopWatch.Stop();
 
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount + 2000, $"Elapsed time should be lesser than {loopCount + 2000}ms");
+            Assert.IsTrue(stopWatch.ElapsedMilliseconds < loopCount + 6000, $"Elapsed time should be lesser than {loopCount + 6000}ms");
             using var cmd3 = new SqlCommand("SELECT dbo.RegExCachedCount()", Conn);
             Assert.IsTrue((int)cmd3.ExecuteScalar() > 1, "(int)cmd2.ExecuteScalar() > 1");
             using var cmd4 = new SqlCommand("SELECT dbo.RegExExecCount()", Conn);
@@ -315,32 +347,6 @@ namespace UnitTestRegExSQL
             Assert.AreEqual(1, reader.GetInt32(2));
         }
 
-        [TestMethod]
-        public void TestRegExPerformanceLongQuery()
-        {
-            const int parallelLevel = 8;
-
-            var cnt = 0;
-            var loopRegExAction = new Action(() =>
-            {
-                using var conn = new SqlConnection(Settings.Default.ConnectionString);
-                conn.Open();
-                using var cmd = new SqlCommand("SELECT TOP 300000 dbo.RegExIsMatch(MTIMEINFO, 'COMPOT4=') FROM TIME", conn);
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    if (reader.GetBoolean(0))
-                        Interlocked.Increment(ref cnt);
-                }
-            });
-            var stopWatch = Stopwatch.StartNew();
-            Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
-            stopWatch.Stop();
-
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 14000, $"Elapsed time should be lesser than 14000 ms");
-            Assert.IsTrue(cnt > 1000000, "cnt should be higher than 1000000");
-        }
-
 #if DEBUG
         [TestMethod]
 #endif
@@ -367,35 +373,6 @@ namespace UnitTestRegExSQL
             Assert.AreNotEqual(0, (int)cmd3.ExecuteScalar());
             Thread.Sleep(2000);
             Assert.AreEqual(0, (int)cmd3.ExecuteScalar());
-        }
-
-#if DEBUG
-        [TestMethod]
-#endif
-        public void TestRegExStressCacheMemoryWithSemiLongQuery()
-        {
-            const int parallelLevel = 8;
-
-            var cnt = 0;
-            var loopRegExAction = new Action(() =>
-            {
-                using var conn = new SqlConnection(Settings.Default.ConnectionString);
-                conn.Open();
-                using var cmd = new SqlCommand("SELECT TOP 10 dbo.RegExIsMatch(MTIMEINFO, MTIMEINFO) FROM TIME", conn);
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    if (reader.GetBoolean(0))
-                        Interlocked.Increment(ref cnt);
-                }
-            });
-            var stopWatch = Stopwatch.StartNew();
-            Parallel.Invoke(Enumerable.Repeat(loopRegExAction, parallelLevel).ToArray());
-            stopWatch.Stop();
-
-            TestMethodBasicForceExpire();
-            Assert.IsTrue(stopWatch.ElapsedMilliseconds < 10000, $"Elapsed time should be lesser than 10000 ms");
-            Assert.AreEqual(80, cnt);
         }
     }
 }
