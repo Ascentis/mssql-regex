@@ -292,8 +292,8 @@ OPEN fields;
 FETCH NEXT FROM fields INTO @field;
 WHILE @@FETCH_STATUS = 0
 BEGIN
-	SET @regex = @regex + CONCAT('(?<', @field, '>(?<=', @field, '=)', @valuePattern, '(?=', @kvpSeparator, ')?)*');
-	FETCH NEXT FROM fields INTO @field;
+    SET @regex = @regex + CONCAT('(?<', @field, '>(?<=', @field, '=)', @valuePattern, '(?=', @kvpSeparator, ')?)*');
+    FETCH NEXT FROM fields INTO @field;
 END;
 
 SET @regex = @regex + CONCAT(')(?<sc>', @rowSeparator, '(?=.+))?');
