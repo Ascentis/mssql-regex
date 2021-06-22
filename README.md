@@ -265,3 +265,63 @@ FROM (
 ) _
 GROUP BY RowGrp
 ```
+
+Example of using RegEx to parse a file with key-value pairs separated by a delimiter and a further delimiter to split rows. Please notice the example also includes code that shows how to build the regex dynamically given the target list of "fields" to be split.
+
+```sql
+/* 
+   This example code parses a delimiter separated input string into key-value pairs and returns a table with rows
+   separated by a defined "row separator".
+   The T-SQL part of the code is an example how to build the regex dynamically taking as input the field list, the 
+   pattern used for detecting values, the key-value pair separator and the row separator.
+*/
+
+-- Input variables
+DECLARE @fieldsList NVARCHAR(255) = 'key1,key2';
+DECLARE @valuePattern NVARCHAR(255) = '\d+';
+DECLARE @kvpSeparator NVARCHAR(255) = ',';
+DECLARE @rowSeparator NVARCHAR(255) = ';';
+
+-- Internal variables to build regex
+DECLARE fields CURSOR FOR SELECT * FROM dbo.RegExSplit(@fieldsList, ',');
+DECLARE @field NVARCHAR(255);
+DECLARE @regex NVARCHAR(255) = '(';
+
+OPEN fields;
+
+FETCH NEXT FROM fields INTO @field;
+WHILE @@FETCH_STATUS = 0
+BEGIN
+	SET @regex = @regex + CONCAT('(?<', @field, '>(?<=', @field, '=)', @valuePattern, '(?=', @kvpSeparator, ')?)*');
+	FETCH NEXT FROM fields INTO @field;
+END;
+
+SET @regex = @regex + CONCAT(')(?<sc>', @rowSeparator, '(?=.+))?');
+CLOSE fields;
+DEALLOCATE fields;
+
+/*
+  RegEx generated above looks like this:
+
+  ((?<key1>(?<=key1=)\d+(?=,)?)*(?<key2>(?<=key2=)\d+(?=,)?)*)(?<sc>;(?=.+))?
+
+  Notice that in order to fetch other fields than key1 and key2 it's necessary to modify the input variable @fieldsList
+  and also the SQL below adding the extra fields to the top SELECT, the second level SELECT clauses and the PIVOT clause.
+*/
+
+SELECT MAX(Key1) Key1, MAX(Key2) Key2
+FROM (
+    SELECT RowGrp, Key1, Key2
+    FROM (		
+        SELECT GrpName, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpName) RowGrp
+        FROM (
+            SELECT MatchNum, GrpName, Item, IIF(GrpName = 'sc' AND Item = ';', 1, 0) RowGrp
+            FROM dbo.RegExMatchesGroups('key1=1,key2=2,key1=5;key2=3,key1=10;key1=4;key3=453,key1=34,key2=546', @regex)
+        ) _
+    ) _
+    PIVOT (
+        MAX(Item) FOR GrpName IN (key1, key2)
+    ) _
+) _
+GROUP BY RowGrp
+```
