@@ -132,7 +132,7 @@ public class RegExCompiled
 
     private static void CheckCleanerTimerShouldStop(int currentTickCount)
     {
-        if (Math.Abs(currentTickCount - _lastCacheUsedMilliseconds) < DefaultExpirationMilliseconds * 2) 
+        if (Math.Abs(currentTickCount - _lastCacheUsedMilliseconds) < _cacheEntryExpirationMilliseconds * 2) 
             return;
         _lastCacheCleanerRunTickCount = 0;
         CleanerTimer.Stop();
