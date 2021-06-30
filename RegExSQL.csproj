@@ -98,6 +98,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>AssemblyAsText Ascentis.RegExSQL.dll &gt; Ascentis.RegExSQL.txt
+mkdir ..\..\Published -force
 powershell -Command "(Get-Content ..\..\CreateAssemblyTemplate.sql) -replace '&lt;BinaryDll&gt;', (Get-Content Ascentis.RegExSQL.txt)| Out-File -encoding ASCII ..\..\Published\CreateRegExAssembly_$(ConfigurationName).sql"</PostBuildEvent>
   </PropertyGroup>
 </Project>
