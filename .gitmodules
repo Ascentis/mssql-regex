@@ -4,3 +4,6 @@
 [submodule "Submodules/Infrastructure"]
 	path = Submodules/Infrastructure
 	url = https://github.com/Ascentis/Infrastructure.git
+[submodule "Submodules/srm"]
+	path = Submodules/srm
+	url = https://github.com/AutomataDotNet/srm.git
