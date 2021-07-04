@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.SqlServer.Server;
@@ -218,9 +217,9 @@ public class RegExCompiled
         return bag;
     }
 
-    public static void FillRowSingleString(object row, out SqlString str)
+    public static void FillRowSingleString(object row, out string str)
     {
-        str = new SqlString((string)row);
+        str = (string)row;
     }
 
     internal class StringsRow
@@ -235,13 +234,13 @@ public class RegExCompiled
         out int matchNum,
         out int grpNum,
         out string grpName,
-        out SqlString item)
+        out string item)
     {
         var stringsRow = (StringsRow) row;
         matchNum = stringsRow.MatchNum;
         grpNum = stringsRow.GrpNum;
         grpName = stringsRow.GrpName;
-        item = new SqlString(stringsRow.Item);
+        item = stringsRow.Item;
     }
 
     internal class CachedRegExEntry
@@ -254,13 +253,13 @@ public class RegExCompiled
 
     public static void FillRowCachedRegEx(
         object row, 
-        out SqlString pattern, 
+        out string pattern, 
         out int options, 
         out int cacheCount,
         out int ttl)
     {
         var cachedRegExEntry = (CachedRegExEntry) row;
-        pattern = new SqlString(cachedRegExEntry.Pattern);
+        pattern = cachedRegExEntry.Pattern;
         options = cachedRegExEntry.Options;
         cacheCount = cachedRegExEntry.Count;
         ttl = cachedRegExEntry.Ttl;
@@ -554,14 +553,15 @@ public class RegExCompiled
         return RegExApiCall(() =>
         {
             using var regex = RegexAcquire(pattern, (RegexOptions)options);
+            var matches = regex.Matches(input);
             var matchesList = new List<StringsRow>();
             var matchNumber = 0;
-            var matches = regex.Matches(input);
             string[] cachedGrpNames = null;
             foreach (Match match in matches)
             {
                 if (cachedGrpNames == null)
                 {
+                    matchesList.Capacity = matches.Count * match.Groups.Count;
                     cachedGrpNames = new string[match.Groups.Count];
                     for (var i = 0; i < match.Groups.Count; i++)
                         cachedGrpNames[i] = regex.GroupNameFromNumber(i);
