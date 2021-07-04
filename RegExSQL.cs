@@ -556,15 +556,23 @@ public class RegExCompiled
             using var regex = RegexAcquire(pattern, (RegexOptions)options);
             var matchesList = new List<StringsRow>();
             var matchNumber = 0;
-            foreach (Match match in regex.Matches(input))
+            var matches = regex.Matches(input);
+            string[] cachedGrpNames = null;
+            foreach (Match match in matches)
             {
+                if (cachedGrpNames == null)
+                {
+                    cachedGrpNames = new string[match.Groups.Count];
+                    for (var i = 0; i < match.Groups.Count; i++)
+                        cachedGrpNames[i] = regex.GroupNameFromNumber(i);
+                }
                 var grpNumber = 0;
                 matchesList.AddRange(
                     from Group grpMatch in match.Groups 
                     select new StringsRow
                     {
                         MatchNum = matchNumber,
-                        GrpName = regex.GroupNameFromNumber(grpNumber),
+                        GrpName = cachedGrpNames[grpNumber],
                         GrpNum = grpNumber++,
                         Item = grpMatch.Value
                     });

@@ -241,12 +241,13 @@ namespace UnitTestRegExSQL
         [TestMethod]
         public void TestRegExMatchesGroupsWithOptions()
         {
-            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupsWithOptions('hellomyworld', '(l+)', 1)", Conn);
+            using var cmd = new SqlCommand("SELECT * FROM dbo.RegExMatchesGroupsWithOptions('hellomyworld', '(?<grp1>l+)', 1)", Conn);
             using var reader = cmd.ExecuteReader();
             Assert.IsTrue(reader.Read());
             var val = reader.GetSqlString(3);
             Assert.AreEqual("ll", val);
             Assert.IsTrue(reader.Read());
+            Assert.AreEqual("grp1", reader.GetSqlString(2));
             Assert.IsTrue(reader.Read());
             val = reader.GetSqlString(3);
             Assert.AreEqual("l", val);
