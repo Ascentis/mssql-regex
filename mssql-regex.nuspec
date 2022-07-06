@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Ascentis.RegExSQL</id>
-    <version>1.1.3.13</version>
+    <version>1.1.13</version>
     <authors>Jose Sebastian Battig</authors>
     <owners>Ascentis</owners>
     <license type="expression">MIT</license>
@@ -11,7 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>.NET assembly to use regular expressions within MSSQL</description>
     <releaseNotes>Refined release using custom ConcurrentStack to keep track of cached regex</releaseNotes>
-    <copyright>Copyright 2020, Ascentis Corporation</copyright>
+    <copyright>Copyright 2022, Ascentis Corporation</copyright>
     <tags>regex mssql</tags>
     <dependencies>
     </dependencies>
@@ -21,11 +21,11 @@
     </references>
   </metadata>
   <files>
-    <file src="bin\Release\Ascentis.RegExSQL.dll" target="lib\net40" />
-    <file src="Published\CreateRegExAssembly_Debug.sql" target="lib\net40" />
-    <file src="Published\CreateRegExAssembly_Debug_UpgradeableLock.sql" target="lib\net40" />
-    <file src="Published\CreateRegExAssembly_Release.sql" target="lib\net40" />
-    <file src="Published\CreateRegExAssembly_Release_UpgradeableLock.sql" target="lib\net40" />
+    <file src="bin\**\Ascentis.RegExSQL.dll" target="content" />
+    <file src="Published\CreateRegExAssembly_Debug.sql"/>
+    <file src="Published\CreateRegExAssembly_Debug_UpgradeableLock.sql"/>
+    <file src="Published\CreateRegExAssembly_Release.sql"/>
+    <file src="Published\CreateRegExAssembly_Release_UpgradeableLock.sql"/>
     <file src="Ascentis.png" target="" />
   </files>
 </package>

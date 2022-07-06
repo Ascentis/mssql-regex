@@ -22,7 +22,7 @@ Nuget repo with packaged up ready made .sql scripts: https://www.nuget.org/packa
 IMPORTANT: Please notice when installing this package in production you will want to run the following command in your database:
 
 ```sql
-GRANT UNSAFE ASSEMBLY TO "you_login"
+GRANT UNSAFE ASSEMBLY TO "your_login"
 ```
 
 It's also required to have CLR enabled in the target database:
@@ -245,25 +245,33 @@ public enum RegexOptions
   }
 ```
 
-Example SQL to parse a tabke if key-value pairs, separated by commands and rows separates by semi-colons.
-The example expects to columns: first column represent values for key named "key1" while the second column shows values for key named "key2".
+Example SQL to parse a table of key-value pairs, separated by commas and rows separates by semi-colons.
+The example returns two columns: first column represent values for key named "key1" while the second column shows values for key named "key2".
+
+**Some notes on the SQL and the regex used in the example:**
+
+Please notice that repeated values for the same key within a row are handled by respecting the last value found in the input string with
+one exception: null values. If you enter as an input like "key_n=" (a blank value for key key_n_) it will be ignored by the handling SQL.
+The group name 'sc' represents the row separator match.
 
 ```sql
-SELECT MAX(Key1) Key1, MAX(Key2) Key2
-FROM (
-    SELECT RowGrp, Key1, Key2
-    FROM (		
-        SELECT GrpName, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpName) RowGrp
+SELECT Key1, Key2
+FROM (	
+    SELECT DISTINCT RowGrp, GrpName, FIRST_VALUE(Item) OVER (PARTITION BY RowGrp, GrpName ORDER BY MatchNum DESC) AS Item
+    FROM (
+        SELECT MatchNum, GrpName, Item, SUM(RowGrp) OVER (ORDER BY MatchNum, GrpName) RowGrp	
         FROM (
             SELECT MatchNum, GrpName, Item, IIF(GrpName = 'sc' AND Item = ';', 1, 0) RowGrp
-            FROM dbo.RegExMatchesGroups('key1=1,key2=2,key1=5;key2=3,key1=10;key1=4;', '((?<key1>(?<=key1=)\d+(?=,)?)*(?<key2>(?<=key2=)\d+(?=,)?)*)(?<sc>;(?=.+))?')			
+            FROM dbo.RegExMatchesGroups('key1=1,key2=2,key1=5;key2=3,key1=10;key1=4;', 
+                                        '(?:(?:key1=(?<key1>\d+),?)*(?:key2=(?<key2>\d+),?)*)(?<sc>;)?')
+            WHERE Item <> '' AND GrpName IN ('key1', 'key2', 'sc')
         ) _
     ) _
-    PIVOT (
-        MAX(Item) FOR GrpName IN (key1, key2)
-    ) _
+    WHERE GrpName <> 'sc'
 ) _
-GROUP BY RowGrp
+PIVOT (
+    MAX(Item) FOR GrpName IN (key1, key2)
+) _
 ```
 
 Example of using RegEx to parse a file with key-value pairs separated by a delimiter and a further delimiter to split rows. Please notice the example also includes code that shows how to build the regex dynamically given the target list of "fields" to be split.
